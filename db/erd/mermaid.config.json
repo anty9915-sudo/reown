@@ -1,0 +1,22 @@
+{
+  "theme": "base",
+  "themeVariables": {
+    "fontFamily": "Malgun Gothic, Apple SD Gothic Neo, sans-serif",
+    "fontSize": "18px",
+    "primaryColor": "#EEF2FF",
+    "primaryBorderColor": "#4F46E5",
+    "primaryTextColor": "#111827",
+    "lineColor": "#6B7280",
+    "attributeBackgroundColorOdd": "#FFFFFF",
+    "attributeBackgroundColorEven": "#F5F7FF"
+  },
+  "er": {
+    "layoutDirection": "TB",
+    "minEntityWidth": 160,
+    "minEntityHeight": 60,
+    "entityPadding": 18,
+    "fontSize": 18,
+    "useMaxWidth": false
+  },
+  "flowchart": { "nodeSpacing": 80, "rankSpacing": 110 }
+}

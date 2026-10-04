@@ -1,0 +1,14 @@
+# 줄바꿈 통일 (Windows의 core.autocrlf=true 환경에서도 LF 유지)
+# migration/seed SQL은 줄바꿈이 바뀌면 SHA-256 해시가 달라진다. (db/README.md)
+
+# 기본: Git이 텍스트로 판단한 파일은 저장소에 LF로 저장
+* text=auto
+
+# 체크아웃할 때도 항상 LF
+*.sql   text eol=lf
+*.md    text eol=lf
+*.json  text eol=lf
+*.mmd   text eol=lf
+
+# 바이너리
+*.png   binary

@@ -1,0 +1,170 @@
+%% REOWN ERD — db/migrations/001_initial_schema.sql 기준 (자동 생성: 실제 DB 카탈로그에서 추출)
+%% 관계 라벨 = 자식 테이블의 FK 컬럼 (ON DELETE 규칙)
+erDiagram
+    regions {
+        bigint id PK
+        varchar(10) code UK
+        varchar(20) sido
+        varchar(30) sigungu "NULL"
+        varchar(30) eupmyeondong
+        timestamptz created_at
+    }
+    categories {
+        bigint id PK
+        varchar(30) name UK
+        smallint sort_order
+    }
+    users {
+        bigint id PK
+        varchar(255) email UK
+        varchar(100) password_hash
+        varchar(20) nickname UK
+        bigint region_id FK "NULL"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    products {
+        bigint id PK
+        bigint seller_id FK
+        bigint category_id FK
+        bigint region_id FK
+        varchar(100) title
+        text description
+        integer price
+        varchar(10) status
+        integer view_count
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz deleted_at "NULL"
+    }
+    product_images {
+        bigint id PK
+        bigint product_id FK
+        text storage_path UK
+        smallint sort_order
+        timestamptz created_at
+    }
+    favorites {
+        bigint user_id PK, FK
+        bigint product_id PK, FK
+        timestamptz created_at
+    }
+    cart {
+        bigint user_id PK, FK
+        bigint product_id PK, FK
+        timestamptz created_at
+    }
+    chat_rooms {
+        bigint id PK
+        bigint product_id FK
+        bigint buyer_id FK
+        timestamptz created_at
+    }
+    messages {
+        bigint id PK
+        bigint chat_room_id FK
+        bigint sender_id FK
+        text content
+        timestamptz read_at "NULL"
+        timestamptz created_at
+    }
+    price_offers {
+        bigint id PK
+        bigint chat_room_id FK
+        integer offered_price
+        varchar(10) status
+        timestamptz responded_at "NULL"
+        timestamptz created_at
+    }
+    trade_appointments {
+        bigint id PK
+        bigint chat_room_id FK
+        bigint proposer_id FK
+        timestamptz scheduled_at
+        varchar(100) place_name
+        varchar(255) place_address "NULL"
+        numeric latitude "NULL 9·6"
+        numeric longitude "NULL 9·6"
+        varchar(10) status
+        timestamptz closed_at "NULL"
+        bigint closed_by FK "NULL"
+        timestamptz created_at
+    }
+    transactions {
+        bigint id PK
+        bigint product_id FK
+        bigint buyer_id FK
+        integer final_price
+        varchar(10) status
+        timestamptz created_at
+        timestamptz completed_at "NULL"
+        timestamptz canceled_at "NULL"
+        timestamptz updated_at
+    }
+    reviews {
+        bigint id PK
+        bigint transaction_id FK
+        bigint reviewer_id FK
+        bigint reviewee_id FK
+        smallint rating
+        varchar(500) content "NULL"
+        timestamptz created_at
+    }
+    reports {
+        bigint id PK
+        bigint reporter_id FK
+        bigint reported_user_id FK
+        bigint product_id FK "NULL"
+        bigint chat_room_id FK "NULL"
+        varchar(20) reason
+        varchar(1000) content "NULL"
+        varchar(10) status
+        timestamptz created_at
+    }
+    blocks {
+        bigint blocker_id PK, FK
+        bigint blocked_id PK, FK
+        timestamptz created_at
+    }
+    notifications {
+        bigint id PK
+        bigint user_id FK
+        varchar(30) type
+        bigint price_offer_id FK "NULL"
+        bigint transaction_id FK "NULL"
+        bigint trade_appointment_id FK "NULL"
+        timestamptz read_at "NULL"
+        timestamptz created_at
+    }
+
+    regions |o--o{ users : "region_id (SET NULL)"
+    regions ||--o{ products : "region_id (RESTRICT)"
+    categories ||--o{ products : "category_id (RESTRICT)"
+    users ||--o{ products : "seller_id (RESTRICT)"
+    users ||--o{ favorites : "user_id (CASCADE)"
+    users ||--o{ cart : "user_id (CASCADE)"
+    users ||--o{ chat_rooms : "buyer_id (RESTRICT)"
+    users ||--o{ messages : "sender_id (RESTRICT)"
+    users |o--o{ trade_appointments : "closed_by (RESTRICT)"
+    users ||--o{ trade_appointments : "proposer_id (RESTRICT)"
+    users ||--o{ reviews : "reviewee_id (RESTRICT)"
+    users ||--o{ reviews : "reviewer_id (RESTRICT)"
+    users ||--o{ reports : "reported_user_id (RESTRICT)"
+    users ||--o{ reports : "reporter_id (RESTRICT)"
+    users ||--o{ blocks : "blocked_id (CASCADE)"
+    users ||--o{ blocks : "blocker_id (CASCADE)"
+    users ||--o{ notifications : "user_id (CASCADE)"
+    products ||--o{ product_images : "product_id (CASCADE)"
+    products ||--o{ favorites : "product_id (CASCADE)"
+    products ||--o{ cart : "product_id (CASCADE)"
+    products ||--o{ chat_rooms : "product_id (RESTRICT)"
+    products |o--o{ reports : "product_id (RESTRICT)"
+    chat_rooms ||--o{ messages : "chat_room_id (RESTRICT)"
+    chat_rooms ||--o{ price_offers : "chat_room_id (RESTRICT)"
+    chat_rooms ||--o{ trade_appointments : "chat_room_id (RESTRICT)"
+    chat_rooms ||--o{ transactions : "product_id, buyer_id (RESTRICT)"
+    chat_rooms |o--o{ reports : "chat_room_id (RESTRICT)"
+    price_offers |o--o{ notifications : "price_offer_id (CASCADE)"
+    trade_appointments |o--o{ notifications : "trade_appointment_id (CASCADE)"
+    transactions ||--o{ reviews : "transaction_id (RESTRICT)"
+    transactions |o--o{ notifications : "transaction_id (CASCADE)"
