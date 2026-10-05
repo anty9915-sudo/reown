@@ -177,6 +177,8 @@ REOWN/
 ├── docs/                     # 설계 문서
 │   ├── DATABASE.md
 │   ├── DB_CONNECTION.md      # DBeaver 접속 안내 (비밀번호 미기재)
+│   ├── API_DRAFT.md          # API 설계안 초안 (검토 중)
+│   ├── PROJECT_STATUS.md     # 진행 상황 요약
 │   └── API.md
 │
 ├── .env.example
@@ -553,7 +555,9 @@ cp .env.example .env
 | `CLAUDE.md` | Claude Code 개발 규칙 |
 | `docs/DATABASE.md` | DB 설계 및 ERD |
 | `docs/DB_CONNECTION.md` | DBeaver 접속 안내 (비밀번호 미기재) |
-| `docs/API.md` | API 명세 |
+| `docs/API.md` | API 명세 (확정본, 작성 전) |
+| `docs/API_DRAFT.md` | API 설계안 초안 (결정 필요 항목 확인 중) |
+| `docs/PROJECT_STATUS.md` | 현재 진행 상황 요약 (팀원·외부 도구 공유용, 민감정보 없음) |
 | `db/README.md` | DB 관리 원칙, 변경 요청 절차, migration / seed / ERD 작업 규칙 |
 
 향후 필요한 문서는 `docs/`에 추가한다.
