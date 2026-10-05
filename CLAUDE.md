@@ -119,6 +119,8 @@ REOWN/
 ├── docs/                     # 설계 문서
 │   ├── DATABASE.md
 │   ├── DB_CONNECTION.md      # DBeaver 접속 안내 (비밀번호 미기재)
+│   ├── API_DRAFT.md          # API 설계안 초안 (확정 전, 구현 기준 아님)
+│   ├── PROJECT_STATUS.md     # 진행 상황 요약
 │   └── API.md
 │
 ├── .env.example
