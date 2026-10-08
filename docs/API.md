@@ -1,376 +1,323 @@
 # REOWN API 명세
 
-> 상태: 작성 중 — 회원가입·로그인 API 작성 완료
-> 기준 경로: `/api/v1`
+> 상태: 공통 규칙 확정, 기능별 API 작성 전
+>
+> 버전: v0.2
 
-이 문서는 프론트엔드와 백엔드가 같은 요청 형식과 응답 형식을 사용하기 위한 약속이다.
+이 문서는 REOWN 프론트엔드와 백엔드가 같은 형식으로 통신하기 위한 공통 규칙을 정리한다. 회원가입이나 상품 등록 같은 개별 기능은 이 문서에 순서대로 추가한다.
 
 ---
 
-## 1. 공통 규칙
+## 1. 기본 규칙
 
-### 1.1 요청과 응답 형식
+### 1.1 주소와 HTTP 메서드
+
+모든 API 경로는 `/api/v1`로 시작한다.
+
+```text
+개발 서버: http://localhost:4000
+예시: GET http://localhost:4000/api/v1/products
+```
+
+| 메서드   | 용도             |
+| -------- | ---------------- |
+| `GET`    | 데이터 조회      |
+| `POST`   | 데이터 생성      |
+| `PATCH`  | 데이터 일부 수정 |
+| `DELETE` | 데이터 삭제      |
+
+### 1.2 데이터 형식
 
 - 요청과 응답은 JSON을 사용한다.
-- 요청 헤더에 `Content-Type: application/json`을 사용한다.
-- 인증이 필요한 API는 `Authorization` 헤더에 JWT를 보낸다.
+- JSON 요청은 `Content-Type: application/json` 헤더를 사용한다.
+- API 필드 이름은 `camelCase`, DB 컬럼 이름은 `snake_case`로 작성한다.
+- 요청에 정의되지 않은 필드는 허용하지 않는다.
+- 응답에 비밀번호 해시, DB 접속 정보 등 민감한 정보를 포함하지 않는다.
+
+### 1.3 공통 값 표현
+
+| 값                  | API 표현            | 예시                         |
+| ------------------- | ------------------- | ---------------------------- |
+| ID                  | 문자열              | `"15"`                       |
+| 날짜와 시간         | UTC ISO 8601 문자열 | `"2026-10-08T03:00:00.000Z"` |
+| 값이 없는 선택 항목 | `null`              | `"completedAt": null`        |
+| 금액                | 원 단위 정수        | `15000`                      |
+| 상태값              | 대문자 문자열       | `"ON_SALE"`                  |
+| 빈 목록             | 빈 배열             | `[]`                         |
+
+DB의 ID가 `bigint`이므로 API에서는 ID를 문자열로 사용한다. 날짜와 시간은 프론트엔드에서 사용자 지역 시간으로 변환한다.
+
+---
+
+## 2. 인증과 권한
+
+인증이 필요한 API는 Access Token을 다음 헤더로 전달한다.
 
 ```http
 Authorization: Bearer <access-token>
 ```
 
-### 1.2 성공 응답
+- 인증 필요 여부는 각 API에 표시한다.
+- 사용자 ID는 요청 데이터가 아니라 JWT에서 가져온다.
+- Refresh Token은 사용하지 않는다.
+- 로그아웃은 클라이언트에서 Access Token을 삭제하는 방식으로 처리한다.
+- 수정과 삭제 전에는 현재 사용자가 해당 데이터의 소유자인지 확인한다.
+- 토큰이 없거나 잘못되면 `401 Unauthorized`를 반환한다.
+- 접근 권한이 없는 데이터는 존재 여부를 숨기기 위해 `404 Not Found`를 반환한다.
+
+### 2.1 JWT 만료 시간
+
+- Access Token은 발급된 시점부터 **2시간** 동안 사용할 수 있다.
+- 백엔드는 환경변수 `JWT_EXPIRES_IN=2h`로 만료 시간을 관리한다.
+- 토큰이 만료되면 `401 Unauthorized`와 `INVALID_TOKEN` 오류를 반환한다.
+- 만료된 토큰은 다시 사용할 수 없으며, 사용자는 다시 로그인해야 한다.
+- Refresh Token은 사용하지 않으므로 토큰을 자동으로 갱신하지 않는다.
+
+### 2.2 프론트엔드 토큰 보관 위치
+
+- 프론트엔드는 Access Token을 브라우저의 `sessionStorage`에 저장한다.
+- 저장할 때 사용하는 키 이름은 `accessToken`으로 통일한다.
+- API 요청 시 저장된 토큰을 읽어 `Authorization` 헤더에 넣는다.
+- 로그아웃하거나 `401 Unauthorized` 응답을 받으면 저장된 토큰을 삭제한다.
+- 브라우저 탭을 닫으면 토큰이 삭제되며, 다시 로그인해야 한다.
+- 토큰을 URL이나 콘솔 로그에 출력하지 않는다.
+
+### 2.3 CORS 허용 주소
+
+CORS는 등록된 프론트엔드 주소에서만 백엔드 API를 호출할 수 있도록 제한한다.
+
+- 개발 환경에서는 `http://localhost:5173`을 허용한다.
+- 배포 환경에서는 실제 프론트엔드 주소만 허용한다.
+- 허용 주소는 백엔드 환경변수 `FRONTEND_URL`로 관리한다.
+- 모든 주소를 허용하는 `*`는 사용하지 않는다.
+- 프론트엔드 주소가 여러 개라면 쉼표로 구분하여 환경변수에 작성한다.
+- JWT를 쿠키가 아닌 `Authorization` 헤더로 보내므로 CORS의 `credentials` 옵션은 사용하지 않는다.
+
+```env
+FRONTEND_URL=http://localhost:5173
+```
+
+---
+
+## 3. 성공 응답
+
+### 3.1 단일 데이터
+
+성공한 데이터는 `data`에 담는다.
 
 ```json
 {
-  "success": true,
+  "data": {
+    "product": {
+      "id": "1",
+      "title": "상품명"
+    }
+  }
+}
+```
+
+### 3.2 목록 데이터
+
+목록은 `data.items` 배열로 반환한다.
+
+```json
+{
+  "data": {
+    "items": []
+  }
+}
+```
+
+### 3.3 본문이 없는 응답
+
+삭제처럼 반환할 데이터가 필요하지 않으면 `204 No Content`를 사용한다. `204` 응답에는 JSON 본문을 보내지 않는다.
+
+---
+
+## 4. 오류 응답
+
+### 4.1 기본 형식
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "입력값이 올바르지 않습니다.",
+    "details": {
+      "title": "상품명은 필수입니다."
+    }
+  }
+}
+```
+
+| 필드            | 필수 | 설명                                   |
+| --------------- | ---- | -------------------------------------- |
+| `error.code`    | 필수 | 프론트엔드가 구분해서 처리할 오류 코드 |
+| `error.message` | 필수 | 오류 설명                              |
+| `error.details` | 선택 | 필드별 입력 오류 등 추가 정보          |
+
+오류 코드는 `UPPER_SNAKE_CASE`로 작성한다. SQL, 스택 트레이스, 환경변수는 응답에 포함하지 않는다.
+
+### 4.2 공통 상태와 오류 코드
+
+| HTTP 상태                   | 오류 코드                 | 설명                             |
+| --------------------------- | ------------------------- | -------------------------------- |
+| `200 OK`                    | -                         | 조회 또는 수정 성공              |
+| `201 Created`               | -                         | 데이터 생성 성공                 |
+| `204 No Content`            | -                         | 성공했지만 반환할 데이터가 없음  |
+| `400 Bad Request`           | `INVALID_JSON`            | JSON 문법이 올바르지 않음        |
+| `400 Bad Request`           | `VALIDATION_ERROR`        | 요청값이 규칙에 맞지 않음        |
+| `401 Unauthorized`          | `AUTHENTICATION_REQUIRED` | 인증 토큰이 없음                 |
+| `401 Unauthorized`          | `INVALID_TOKEN`           | 토큰이 잘못되었거나 만료됨       |
+| `404 Not Found`             | `RESOURCE_NOT_FOUND`      | 데이터가 없거나 접근 권한이 없음 |
+| `409 Conflict`              | `RESOURCE_CONFLICT`       | 중복 데이터 또는 상태 충돌       |
+| `429 Too Many Requests`     | `RATE_LIMIT_EXCEEDED`     | 요청 횟수 제한 초과              |
+| `500 Internal Server Error` | `INTERNAL_SERVER_ERROR`   | 서버 내부 오류                   |
+
+기능별로 구분이 필요한 오류 코드는 해당 API 명세에 추가한다.
+
+---
+
+## 5. 입력값 검증
+
+백엔드는 다음 내용을 확인한다.
+
+- 필수값이 있는지 확인한다.
+- 문자열, 숫자, 불리언 타입을 확인한다.
+- 문자열의 길이와 허용 문자를 확인한다.
+- 숫자의 최솟값과 최댓값을 확인한다.
+- 요청에 정의되지 않은 필드가 있는지 확인한다.
+- 문자열을 숫자나 불리언으로 자동 변환하지 않는다.
+
+입력 오류가 여러 개라면 `details`에 함께 반환할 수 있다.
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "입력값이 올바르지 않습니다.",
+    "details": {
+      "title": "상품명은 필수입니다.",
+      "price": "가격은 1 이상의 정수여야 합니다."
+    }
+  }
+}
+```
+
+---
+
+## 6. 목록 조회와 페이지네이션
+
+데이터가 많은 목록은 커서 기반 페이지네이션을 사용한다.
+
+| 파라미터 | 필수 | 기본값 | 설명                              |
+| -------- | ---- | ------ | --------------------------------- |
+| `limit`  | 선택 | `20`   | 조회할 개수, 1~100                |
+| `cursor` | 선택 | 없음   | 이전 응답에서 받은 다음 페이지 값 |
+
+```http
+GET /api/v1/products?limit=20&cursor=<nextCursor>
+```
+
+```json
+{
+  "data": {
+    "items": [],
+    "pageInfo": {
+      "nextCursor": null,
+      "hasNext": false
+    }
+  }
+}
+```
+
+- 첫 요청에서는 `cursor`를 보내지 않는다.
+- 다음 페이지가 없으면 `nextCursor`는 `null`이다.
+- 검색, 필터, 정렬 값은 각 목록 API에 따로 작성한다.
+- 허용하지 않은 값은 `400 VALIDATION_ERROR`로 처리한다.
+
+---
+
+## 7. 보안과 DB 처리
+
+- 비밀번호는 bcrypt로 해시하여 저장한다.
+- 모든 SQL 값은 `pg`의 `$1`, `$2`와 같은 파라미터로 전달한다.
+- 사용자 입력을 SQL 문자열에 직접 붙이지 않는다.
+- JWT, DB 비밀번호, Service Role Key를 응답이나 로그에 기록하지 않는다.
+- 공개 상품 조회에서는 소프트 삭제된 상품을 제외한다.
+- 여러 테이블을 함께 변경할 때는 DB 트랜잭션을 사용한다.
+- Socket.IO 알림은 DB 작업이 완료된 후 전송한다.
+
+---
+
+## 8. 기능별 API 작성 양식
+
+새 API를 추가할 때 아래 양식을 복사해서 작성한다.
+
+````md
+### 기능 이름
+
+기능을 한 문장으로 설명한다.
+
+```http
+METHOD /api/v1/path
+```
+
+- 인증: 필요 / 불필요
+- 권한: 필요한 권한 설명
+- 성공 상태 코드: `200 OK`
+
+#### 요청
+
+```json
+{}
+```
+
+| 필드 | 타입 | 필수 | 설명 |
+| ---- | ---- | ---- | ---- |
+
+#### 성공 응답
+
+```json
+{
   "data": {}
 }
 ```
 
-### 1.3 실패 응답
+#### 오류
 
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "사용자에게 보여줄 오류 메시지"
-  }
-}
-```
+| 상태 코드 | 오류 코드 | 발생 조건 |
+| --------- | --------- | --------- |
 
-- `code`는 프론트엔드가 오류 종류를 구분할 때 사용한다.
-- `message`는 사용자가 이해할 수 있는 한글 문장으로 작성한다.
-- 비밀번호, 비밀번호 해시, JWT 비밀키 같은 정보는 응답에 포함하지 않는다.
+#### 처리 규칙
+
+- 인증과 권한 규칙
+- 상태 변경 조건
+- 필요한 트랜잭션과 알림
+````
 
 ---
 
-## 2. 회원가입
+## 9. 공통 테스트 항목
 
-새로운 사용자 계정을 만든다.
+각 API에서 해당되는 항목을 확인한다.
 
-```http
-POST /api/v1/auth/signup
-```
-
-인증은 필요하지 않다.
-
-### 2.1 요청 Body
-
-```json
-{
-  "email": "student@example.com",
-  "password": "password123!",
-  "nickname": "리오너"
-}
-```
-
-| 필드 | 타입 | 필수 | 규칙 |
-|---|---|---|---|
-| `email` | string | O | 이메일 형식, 최대 255자 |
-| `password` | string | O | 8자 이상 20자 이하 |
-| `nickname` | string | O | 한글·영문·숫자만 사용, 2자 이상 20자 이하 |
-
-처리 규칙:
-
-1. 이메일 앞뒤 공백을 제거하고 소문자로 바꾼다.
-2. 이메일과 닉네임의 중복을 확인한다.
-3. 비밀번호를 bcrypt로 해시한 뒤 저장한다.
-4. 가입 직후 지역은 설정하지 않은 상태(`regionId: null`)로 둔다.
-5. 회원 생성에 성공하면 JWT Access Token을 발급한다.
-
-### 2.2 성공 응답
-
-**상태 코드: `201 Created`**
-
-```json
-{
-  "success": true,
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "user": {
-      "id": 1,
-      "email": "student@example.com",
-      "nickname": "리오너",
-      "regionId": null
-    }
-  }
-}
-```
-
-### 2.3 실패 응답
-
-#### 요청값이 올바르지 않음
-
-**상태 코드: `400 Bad Request`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "입력값을 확인해 주세요."
-  }
-}
-```
-
-다음과 같은 경우에 반환한다.
-
-- 필수값이 없음
-- 이메일 형식이 올바르지 않음
-- 비밀번호 길이가 규칙에 맞지 않음
-- 닉네임에 허용되지 않은 문자가 포함됨
-
-#### 이미 사용 중인 이메일
-
-**상태 코드: `409 Conflict`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "EMAIL_ALREADY_EXISTS",
-    "message": "이미 사용 중인 이메일입니다."
-  }
-}
-```
-
-#### 이미 사용 중인 닉네임
-
-**상태 코드: `409 Conflict`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "NICKNAME_ALREADY_EXISTS",
-    "message": "이미 사용 중인 닉네임입니다."
-  }
-}
-```
+- 정상 요청
+- 필수값 누락과 잘못된 타입
+- 길이와 범위를 벗어난 값
+- 정의되지 않은 요청 필드
+- 인증 토큰 없음 또는 잘못된 토큰
+- 다른 사용자의 데이터 접근
+- 존재하지 않는 데이터
+- 중복 요청 또는 허용되지 않는 상태 변경
+- 서버와 DB 오류
+- 응답에 민감 정보가 포함되지 않는지 확인
 
 ---
 
-## 3. 로그인
+## 10. 변경 이력
 
-이메일과 비밀번호를 확인하고 JWT Access Token을 발급한다.
-
-```http
-POST /api/v1/auth/login
-```
-
-인증은 필요하지 않다.
-
-### 3.1 요청 Body
-
-```json
-{
-  "email": "student@example.com",
-  "password": "password123!"
-}
-```
-
-| 필드 | 타입 | 필수 | 규칙 |
-|---|---|---|---|
-| `email` | string | O | 가입할 때 사용한 이메일 |
-| `password` | string | O | 가입할 때 사용한 비밀번호 |
-
-처리 규칙:
-
-1. 이메일 앞뒤 공백을 제거하고 소문자로 바꾼다.
-2. 이메일로 사용자를 찾는다.
-3. bcrypt를 사용하여 비밀번호를 비교한다.
-4. 정보가 일치하면 JWT Access Token을 발급한다.
-5. 이메일이 없거나 비밀번호가 틀려도 같은 오류를 반환한다.
-
-### 3.2 성공 응답
-
-**상태 코드: `200 OK`**
-
-```json
-{
-  "success": true,
-  "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIs...",
-    "user": {
-      "id": 1,
-      "email": "student@example.com",
-      "nickname": "리오너",
-      "regionId": 123
-    }
-  }
-}
-```
-
-### 3.3 실패 응답
-
-#### 요청값이 올바르지 않음
-
-**상태 코드: `400 Bad Request`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "이메일과 비밀번호를 입력해 주세요."
-  }
-}
-```
-
-#### 이메일 또는 비밀번호가 일치하지 않음
-
-**상태 코드: `401 Unauthorized`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_CREDENTIALS",
-    "message": "이메일 또는 비밀번호가 올바르지 않습니다."
-  }
-}
-```
-
-이메일이 존재하는지 외부에 알려주지 않기 위해 이메일 오류와 비밀번호 오류를 구분하지 않는다.
-
----
-
-## 4. JWT 사용 방법
-
-로그인 이후 인증이 필요한 API를 호출할 때 발급받은 토큰을 헤더에 넣는다.
-
-```http
-GET /api/v1/users/me
-Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
-```
-
-JWT에는 최소한 사용자 ID를 넣는다.
-
-```json
-{
-  "userId": 1
-}
-```
-
-### 4.1 JWT 만료 시간
-
-- Access Token의 만료 시간은 **발급 시점부터 2시간**으로 한다.
-- 백엔드는 환경변수 `JWT_EXPIRES_IN=2h`를 사용하여 만료 시간을 관리한다.
-- 만료된 토큰은 사용할 수 없으며, 사용자는 다시 로그인해야 한다.
-- REOWN은 Refresh Token을 사용하지 않으므로 Access Token을 자동으로 갱신하지 않는다.
-- 프론트엔드는 `401 Unauthorized` 응답을 받으면 저장된 토큰을 삭제하고 로그인 화면으로 이동한다.
-
-JWT에는 비밀번호나 이메일 같은 개인정보를 넣지 않는다. 현재는 사용자 ID만 넣는다.
-
-### 4.2 인증 실패 응답
-
-토큰이 없거나 올바르지 않거나 만료된 경우 다음 응답을 반환한다.
-
-**상태 코드: `401 Unauthorized`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "로그인이 필요합니다."
-  }
-}
-```
-
----
-
-## 5. 로그아웃
-
-REOWN은 Refresh Token을 사용하지 않는다. 따라서 별도의 로그아웃 API를 만들지 않는다.
-
-로그아웃할 때 프론트엔드가 보관 중인 Access Token을 삭제한다.
-
-### 5.1 프론트엔드 토큰 보관 규칙
-
-- Access Token은 브라우저의 `sessionStorage`에 저장한다.
-- 저장할 때 사용하는 키 이름은 `accessToken`으로 통일한다.
-- 로그인 성공 시 토큰을 저장하고, 로그아웃하거나 인증에 실패하면 삭제한다.
-- 브라우저 탭을 닫으면 `sessionStorage`의 토큰도 사라지므로 다시 로그인해야 한다.
-- 토큰을 URL, 화면, 콘솔 로그에 출력하지 않는다.
-- API를 호출할 때 저장된 토큰을 읽어 `Authorization` 헤더에 넣는다.
-
-```javascript
-sessionStorage.setItem('accessToken', accessToken)
-
-const token = sessionStorage.getItem('accessToken')
-
-sessionStorage.removeItem('accessToken')
-```
-
----
-
-## 6. CORS 규칙
-
-CORS는 허용된 프론트엔드 주소에서만 백엔드 API를 호출할 수 있게 하는 설정이다.
-
-### 6.1 허용 주소
-
-- 개발 환경에서는 Vite 기본 주소인 `http://localhost:5173`을 허용한다.
-- 배포 환경에서는 실제 프론트엔드 주소 한 개만 허용한다.
-- 허용 주소는 백엔드 환경변수 `FRONTEND_URL`로 관리한다.
-- 모든 주소를 허용하는 `*`는 사용하지 않는다.
-- 주소가 여러 개 필요하면 코드에 직접 추가하지 않고 환경변수에 쉼표로 구분하여 작성한다.
-
-```env
-# 개발 환경
-FRONTEND_URL=http://localhost:5173
-
-# 주소가 여러 개인 경우
-FRONTEND_URL=http://localhost:5173,https://reown.example.com
-```
-
-주소를 비교할 때는 프로토콜과 포트까지 정확히 확인한다. 예를 들어 `http://localhost:5173`과 `http://localhost:3000`은 서로 다른 주소다.
-
-### 6.2 허용 항목
-
-| 항목 | 허용값 |
-|---|---|
-| HTTP 메서드 | `GET`, `POST`, `PATCH`, `DELETE`, `OPTIONS` |
-| 요청 헤더 | `Content-Type`, `Authorization` |
-| 쿠키 전송 | 사용하지 않음 |
-
-REOWN은 JWT를 쿠키가 아니라 `Authorization` 헤더로 보내므로 CORS의 `credentials` 옵션은 `false`로 설정한다.
-
-허용되지 않은 주소의 요청은 브라우저에서 차단한다. CORS 오류에는 DB 정보나 서버 내부 정보를 포함하지 않는다.
-
----
-
-## 7. 서버 오류
-
-예상하지 못한 서버 또는 DB 오류가 발생한 경우 다음 응답을 반환한다.
-
-**상태 코드: `500 Internal Server Error`**
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INTERNAL_SERVER_ERROR",
-    "message": "서버 오류가 발생했습니다."
-  }
-}
-```
-
-DB 오류 내용, SQL 문장, 환경변수, 오류 스택은 사용자에게 반환하지 않는다.
-
----
-
-## 8. 인증·CORS 설정 요약
-
-| 항목 | 규칙 |
-|---|---|
-| JWT 만료 시간 | 발급 후 2시간 (`JWT_EXPIRES_IN=2h`) |
-| 토큰 저장 위치 | 브라우저 `sessionStorage` |
-| 토큰 저장 키 | `accessToken` |
-| 개발 CORS 주소 | `http://localhost:5173` |
-| 배포 CORS 주소 | 실제 프론트엔드 주소만 허용 |
-| CORS 환경변수 | `FRONTEND_URL` |
-| 쿠키·CORS credentials | 사용하지 않음 |
+| 날짜       | 버전 | 내용                                          |
+| ---------- | ---- | --------------------------------------------- |
+| 2026-10-08 | v0.1 | 공통 API 규칙 초안 작성                       |
+| 2026-10-08 | v0.2 | 학부 팀 프로젝트 수준에 맞게 공통 규칙 간소화 |
