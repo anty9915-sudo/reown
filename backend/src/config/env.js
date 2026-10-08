@@ -25,10 +25,16 @@ const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .map((url) => url.trim())
   .filter(Boolean);
 
+const jwtSecret = required('JWT_SECRET');
+
+if (Buffer.byteLength(jwtSecret, 'utf8') < 32) {
+  throw new Error('JWT_SECRET은 32바이트 이상이어야 합니다.');
+}
+
 const env = {
   port,
   databaseUrl: required('DATABASE_URL'),
-  jwtSecret: required('JWT_SECRET'),
+  jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '2h',
   frontendUrls,
 };
