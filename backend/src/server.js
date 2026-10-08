@@ -1,7 +1,6 @@
 import app from './app.js';
+import env from './config/env.js';
 
-const PORT = Number(process.env.PORT) || 4000;
-
-app.listen(PORT, () => {
-  console.log(`REOWN backend listening on http://localhost:${PORT}`);
+app.listen(env.port, () => {
+  console.log(`REOWN backend listening on http://localhost:${env.port}`);
 });

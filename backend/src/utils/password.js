@@ -1,1 +1,8 @@
-// 비밀번호 해시와 비교를 담당한다.
+import bcrypt from 'bcrypt';
+
+const SALT_ROUNDS = 10;
+
+export const hashPassword = (password) => bcrypt.hash(password, SALT_ROUNDS);
+
+export const comparePassword = (password, passwordHash) =>
+  bcrypt.compare(password, passwordHash);

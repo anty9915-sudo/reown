@@ -1,1 +1,11 @@
-// 상태 코드와 오류 코드를 포함하는 애플리케이션 오류를 정의한다.
+class AppError extends Error {
+  constructor(status, code, message, details) {
+    super(message);
+    this.name = 'AppError';
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}
+
+export default AppError;

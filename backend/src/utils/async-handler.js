@@ -1,1 +1,5 @@
-// 비동기 라우트 오류를 Express 오류 미들웨어로 전달한다.
+const asyncHandler = (handler) => (req, res, next) => {
+  Promise.resolve(handler(req, res, next)).catch(next);
+};
+
+export default asyncHandler;

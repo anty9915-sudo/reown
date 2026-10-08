@@ -1,1 +1,9 @@
-// JWT 생성과 검증을 담당한다.
+import jwt from 'jsonwebtoken';
+import env from '../config/env.js';
+
+export const createAccessToken = (userId) =>
+  jwt.sign({ userId: String(userId) }, env.jwtSecret, {
+    expiresIn: env.jwtExpiresIn,
+  });
+
+export const verifyAccessToken = (token) => jwt.verify(token, env.jwtSecret);

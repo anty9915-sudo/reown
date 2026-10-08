@@ -1,1 +1,8 @@
-// API 하위 라우터 등록을 담당한다.
+import { Router } from 'express';
+import authRouter from './auth.routes.js';
+
+const router = Router();
+
+router.use('/auth', authRouter);
+
+export default router;
