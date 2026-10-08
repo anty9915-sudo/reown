@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import * as favoritesController from '../controllers/favorites.controller.js';
 import * as productsController from '../controllers/products.controller.js';
 import * as transactionsController from '../controllers/transactions.controller.js';
 import authenticate from '../middleware/authenticate.js';
@@ -42,6 +43,13 @@ router.delete(
   authenticate,
   validateIdParam('productId'),
   asyncHandler(productsController.deleteProduct),
+);
+// 로그인 사용자가 상품의 좋아요를 추가하거나 취소한다.
+router.post(
+  '/:productId/favorite',
+  authenticate,
+  validateIdParam('productId'),
+  asyncHandler(favoritesController.toggleFavorite),
 );
 // 판매자 전용 거래 생성: transactions controller/service로 연결한다.
 router.post(
