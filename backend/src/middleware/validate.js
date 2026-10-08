@@ -1,8 +1,9 @@
 import AppError from '../utils/app-error.js';
 
-// 검사 함수가 찾은 입력 오류를 공통 400 오류로 전달한다.
-const validate = (validator) => (req, res, next) => {
-  const details = validator(req.body);
+// routes에서 validator와 검사할 위치(body/query)를 받아 공통 입력 검증을 수행한다.
+// 오류가 있으면 error-handler.js로 AppError를 전달하고, 없으면 controller로 진행한다.
+const validate = (validator, source = 'body') => (req, res, next) => {
+  const details = validator(req[source]);
 
   if (Object.keys(details).length > 0) {
     return next(

@@ -1,8 +1,8 @@
 # REOWN API 명세
 
-> 상태: 공통 규칙 확정, 기능별 API 작성 전
+> 상태: 공통 규칙 및 상품 1차 API 작성
 >
-> 버전: v0.2
+> 버전: v0.3
 
 이 문서는 REOWN 프론트엔드와 백엔드가 같은 형식으로 통신하기 위한 공통 규칙을 정리한다. 회원가입이나 상품 등록 같은 개별 기능은 이 문서에 순서대로 추가한다.
 
@@ -315,9 +315,226 @@ METHOD /api/v1/path
 
 ---
 
-## 10. 변경 이력
+## 10. 카테고리·지역 API
+
+### 10.1 카테고리 목록
+
+```http
+GET /api/v1/categories
+```
+
+- 인증: 불필요
+- 성공: `200 OK`
+- `sort_order`, `id` 순으로 정렬한다.
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "1",
+        "name": "디지털기기"
+      }
+    ]
+  }
+}
+```
+
+### 10.2 지역 검색
+
+```http
+GET /api/v1/regions?keyword=강남&limit=20
+```
+
+- 인증: 불필요
+- `keyword`: 필수, 1~50자
+- `limit`: 선택, 기본값 20, 범위 1~100
+
+```json
+{
+  "data": {
+    "items": [
+      {
+        "id": "25",
+        "code": "1168010100",
+        "sido": "서울특별시",
+        "sigungu": "강남구",
+        "eupmyeondong": "역삼동"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 11. 상품 API
+
+### 11.1 상품 목록
+
+```http
+GET /api/v1/products
+```
+
+- 인증: 선택
+- 로그인 사용자는 자신이 차단한 판매자의 상품이 제외된다.
+
+| Query | 필수 | 설명 |
+|---|---|---|
+| `keyword` | 선택 | 상품명 검색, 1~100자 |
+| `categoryId` | 선택 | 카테고리 ID |
+| `regionId` | 선택 | 지역 ID |
+| `status` | 선택 | `ON_SALE`, `RESERVED`, `SOLD` |
+| `minPrice` | 선택 | 최소 가격 |
+| `maxPrice` | 선택 | 최대 가격 |
+| `sort` | 선택 | `latest`, `oldest`, `priceAsc`, `priceDesc`, `views` |
+| `limit` | 선택 | 기본값 20, 범위 1~100 |
+| `cursor` | 선택 | 이전 응답의 다음 페이지 커서 |
+
+```json
+{
+  "data": {
+    "items": [],
+    "pageInfo": {
+      "nextCursor": null,
+      "hasNext": false
+    }
+  }
+}
+```
+
+Storage 연결 전까지 `thumbnailUrl`은 `null`로 반환한다.
+
+### 11.2 상품 상세
+
+```http
+GET /api/v1/products/:productId
+```
+
+- 인증: 선택
+- 삭제된 상품은 `404 RESOURCE_NOT_FOUND`를 반환한다.
+- 판매자 본인의 조회수는 증가하지 않는다.
+- 같은 사용자 또는 IP의 조회수는 상품별로 10분에 한 번 증가한다.
+- Storage 연결 전까지 `images`는 빈 배열로 반환한다.
+
+### 11.3 상품 수정
+
+```http
+PATCH /api/v1/products/:productId
+Authorization: Bearer <access-token>
+```
+
+- 판매자 본인의 `ON_SALE` 상품만 수정할 수 있다.
+- 요청 필드 중 하나 이상을 보내야 한다.
+
+```json
+{
+  "categoryId": "1",
+  "title": "수정한 상품명",
+  "description": "수정한 설명",
+  "price": 15000
+}
+```
+
+| 필드 | 타입 | 제한 |
+|---|---|---|
+| `categoryId` | string | 존재하는 카테고리 ID |
+| `title` | string | 1~100자 |
+| `description` | string | 1~2000자 |
+| `price` | integer | 1~1,000,000,000원 |
+
+| 상태 | 오류 코드 | 조건 |
+|---|---|---|
+| `400` | `VALIDATION_ERROR` | 요청값 또는 카테고리가 올바르지 않음 |
+| `401` | `AUTHENTICATION_REQUIRED` 또는 `INVALID_TOKEN` | 인증 실패 |
+| `404` | `RESOURCE_NOT_FOUND` | 상품이 없거나 판매자가 아님 |
+| `409` | `RESOURCE_CONFLICT` | 판매중 상품이 아님 |
+
+### 11.4 상품 삭제
+
+```http
+DELETE /api/v1/products/:productId
+Authorization: Bearer <access-token>
+```
+
+- 판매자 본인만 삭제할 수 있다.
+- `ON_SALE`, `SOLD` 상품만 삭제할 수 있다.
+- 실제 행을 삭제하지 않고 `deleted_at`을 기록한다.
+- 대기·수락된 제안과 거래 약속을 같은 트랜잭션에서 정리한다.
+- 성공하면 `204 No Content`를 반환한다.
+- `RESERVED` 상품은 `409 RESOURCE_CONFLICT`를 반환한다.
+
+---
+
+## 12. 거래 상태 API
+
+### 12.1 예약 또는 바로 거래완료
+
+```http
+POST /api/v1/products/:productId/transactions
+Authorization: Bearer <access-token>
+```
+
+```json
+{
+  "chatRoomId": "10",
+  "status": "RESERVED"
+}
+```
+
+- 판매자만 실행할 수 있다.
+- `status`는 `RESERVED` 또는 `COMPLETED`다.
+- 해당 상품의 채팅방만 사용할 수 있다.
+- 차단 관계에서는 거래를 시작할 수 없다.
+- `finalPrice`는 서버가 수락된 제안 가격 또는 상품 가격으로 계산한다.
+- 성공하면 `201 Created`를 반환한다.
+
+### 12.2 예약 완료 또는 취소
+
+```http
+PATCH /api/v1/transactions/:transactionId
+Authorization: Bearer <access-token>
+```
+
+```json
+{
+  "status": "COMPLETED"
+}
+```
+
+- 판매자만 실행할 수 있다.
+- `RESERVED` 거래만 변경할 수 있다.
+- `status`는 `COMPLETED` 또는 `CANCELED`다.
+- 상품 상태, 거래, 제안·약속 정리, 알림을 하나의 트랜잭션으로 처리한다.
+
+허용되는 흐름:
+
+```text
+ON_SALE → RESERVED
+ON_SALE → SOLD
+RESERVED → SOLD
+RESERVED → ON_SALE
+```
+
+---
+
+## 13. 아직 구현하지 않는 상품 API
+
+다음 API는 Supabase Storage 버킷 준비 후 작성한다.
+
+```text
+POST   /api/v1/products
+POST   /api/v1/products/:productId/images
+PATCH  /api/v1/products/:productId/images/order
+DELETE /api/v1/products/:productId/images/:imageId
+```
+
+---
+
+## 14. 변경 이력
 
 | 날짜       | 버전 | 내용                                          |
 | ---------- | ---- | --------------------------------------------- |
 | 2026-10-08 | v0.1 | 공통 API 규칙 초안 작성                       |
 | 2026-10-08 | v0.2 | 학부 팀 프로젝트 수준에 맞게 공통 규칙 간소화 |
+| 2026-10-08 | v0.3 | 카테고리·지역·상품 조회/수정/삭제·거래 상태 API 추가 |
