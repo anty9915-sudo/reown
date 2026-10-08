@@ -7,6 +7,7 @@ import AppError from '../utils/app-error.js';
 import { createAccessToken } from '../utils/jwt.js';
 import { comparePassword, hashPassword } from '../utils/password.js';
 
+// DB 조회 결과에서 비밀번호 해시를 제외하고 API 응답 형태로 바꾼다.
 const toPublicUser = (user) => ({
   id: String(user.id),
   email: user.email,
@@ -17,6 +18,7 @@ const toPublicUser = (user) => ({
 const conflictError = (field, message) =>
   new AppError(409, 'RESOURCE_CONFLICT', message, { [field]: message });
 
+// 중복을 확인하고 비밀번호를 해시한 뒤 새 회원과 Access Token을 만든다.
 export const signup = async ({ email, password, nickname }) => {
   const normalizedEmail = email.trim().toLowerCase();
   const [emailUser, nicknameUser] = await Promise.all([
@@ -59,6 +61,7 @@ export const signup = async ({ email, password, nickname }) => {
   };
 };
 
+// 이메일과 비밀번호를 확인한 뒤 사용자 정보와 Access Token을 반환한다.
 export const login = async ({ email, password }) => {
   const normalizedEmail = email.trim().toLowerCase();
   const user = await findUserByEmail(normalizedEmail);

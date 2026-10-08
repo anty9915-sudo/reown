@@ -1,5 +1,6 @@
 import AppError from '../utils/app-error.js';
 
+// 검사 함수가 찾은 입력 오류를 공통 400 오류로 전달한다.
 const validate = (validator) => (req, res, next) => {
   const details = validator(req.body);
 
