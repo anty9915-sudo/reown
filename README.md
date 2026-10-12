@@ -60,6 +60,7 @@ Frontend
 
 - Node.js
 - Express
+- TypeScript
 
 ## Database
 
@@ -150,7 +151,7 @@ REOWN/
 │   ├── vite.config.js
 │   └── eslint.config.js
 │
-├── backend/                  # Node.js + Express
+├── backend/                  # Node.js + Express + TypeScript
 │   ├── src/
 │   │   ├── routes/
 │   │   ├── controllers/
@@ -158,9 +159,10 @@ REOWN/
 │   │   ├── repositories/
 │   │   ├── middleware/
 │   │   ├── utils/
-│   │   ├── app.js
-│   │   └── server.js
-│   └── package.json
+│   │   ├── app.ts
+│   │   └── server.ts
+│   ├── package.json
+│   └── tsconfig.json
 │
 ├── db/                       # 실제 DB 작업 파일 (db/README.md 참고)
 │   ├── migrations/
@@ -509,6 +511,14 @@ npm run dev
 cd backend
 npm install
 npm run dev
+```
+
+타입 검사와 배포용 JavaScript 빌드는 다음 명령을 사용한다.
+
+```bash
+npm run typecheck
+npm run build
+npm start
 ```
 
 실제 실행 명령은 프로젝트 구현 과정에서 `package.json`에 정의된 명령을 기준으로 한다.
