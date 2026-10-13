@@ -108,8 +108,10 @@ REOWN/
 │   ├── migrations/
 │   │   └── 001_initial_schema.sql
 │   ├── seeds/
+│   │   ├── 001_regions.sql
 │   │   ├── 002_categories.sql
-│   │   └── build_regions_seed.mjs
+│   │   ├── build_regions_seed.mjs
+│   │   └── source/            # 법정동 원본
 │   ├── erd/
 │   │   ├── REOWN-ERD.png
 │   │   ├── REOWN-ERD.mmd
@@ -129,7 +131,7 @@ REOWN/
 └── README.md
 ```
 
-`db/seeds/001_regions.sql`(법정동 지역 seed)은 아직 없다. 공식 법정동 원본 데이터를 확보한 뒤 `db/seeds/build_regions_seed.mjs`로 생성할 예정이다.
+`db/seeds/001_regions.sql`(법정동 지역 seed)은 공식 법정동 원본(`db/seeds/source/`)으로 `db/seeds/build_regions_seed.mjs`가 생성한 파일이다. 직접 수정하지 않는다.
 
 세부 폴더 구조는 실제 개발 과정에서 필요에 따라 정한다.
 
@@ -258,7 +260,7 @@ notifications
 | 초기 마이그레이션 | `db/migrations/001_initial_schema.sql` 작성 및 로컬 검증 완료 |
 | Supabase 적용 | `001_initial_schema.sql` 적용 완료 |
 | ERD | `db/erd/`에 생성, 실제 SQL 구조와 대조 완료 |
-| 초기 데이터(seed) | **Supabase에 아직 적용하지 않음** (`002_categories.sql` 작성됨, `001_regions.sql` 생성 예정) |
+| 초기 데이터(seed) | Supabase 적용 완료 (2026-10-05): `001_regions.sql` 5,067행, `002_categories.sql` 16행 |
 | API | 아직 구현하지 않음 (`docs/API.md` 작성 전) |
 
 DB 구조를 변경할 때는 요구사항과 ERD, 테이블 구조를 먼저 검토한다.

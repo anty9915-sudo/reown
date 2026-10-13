@@ -166,8 +166,10 @@ REOWN/
 │   ├── migrations/
 │   │   └── 001_initial_schema.sql
 │   ├── seeds/
+│   │   ├── 001_regions.sql
 │   │   ├── 002_categories.sql
-│   │   └── build_regions_seed.mjs
+│   │   ├── build_regions_seed.mjs
+│   │   └── source/            # 법정동 원본
 │   ├── erd/
 │   │   ├── REOWN-ERD.png
 │   │   ├── REOWN-ERD.mmd
@@ -187,7 +189,7 @@ REOWN/
 └── README.md
 ```
 
-`db/seeds/001_regions.sql`(법정동 지역 seed)은 아직 없다. 공식 법정동 원본 데이터를 확보한 뒤 `db/seeds/build_regions_seed.mjs`로 생성할 예정이다.
+`db/seeds/001_regions.sql`(법정동 지역 seed)은 공식 법정동 원본(`db/seeds/source/`)으로 `db/seeds/build_regions_seed.mjs`가 생성한 파일이다.
 
 세부 구조는 개발 과정에서 실제 요구사항에 맞춰 확정한다.
 
@@ -336,7 +338,7 @@ Database는 **Supabase PostgreSQL**을 사용한다.
 
 실제 마이그레이션 SQL, seed, ERD는 `db/` 폴더에서 관리한다 (`db/README.md`).
 
-DB 구조는 팀원 검토를 거쳐 확정되었고(`docs/DATABASE.md` v1.1), 초기 마이그레이션(`001_initial_schema.sql`)이 Supabase에 적용되었다. 초기 데이터(seed)는 아직 Supabase에 적용하지 않았다.
+DB 구조는 팀원 검토를 거쳐 확정되었고(`docs/DATABASE.md` v1.1), 초기 마이그레이션(`001_initial_schema.sql`)이 Supabase에 적용되었다. 초기 데이터(seed)도 Supabase에 적용되었다 (2026-10-05, 지역 5,067개·카테고리 16개).
 
 ### DB 관리
 
@@ -583,7 +585,7 @@ cp .env.example .env
 
 # 📌 현재 프로젝트 상태
 
-현재는 **프로젝트 구조 구성과 DB 설계·구축까지 완료**된 상태이며, 초기 데이터(seed)와 API·서비스 구현은 진행 중이다.
+현재는 **프로젝트 구조 구성과 DB 설계·구축, 초기 데이터(seed) 적용까지 완료**된 상태이며, API·서비스 구현은 진행 중이다.
 
 | 구분 | 항목 |
 |---|---|
@@ -591,7 +593,7 @@ cp .env.example .env
 | 완료 | DB 설계 확정 (`docs/DATABASE.md` v1.1) |
 | 완료 | 초기 마이그레이션 작성·로컬 검증 및 Supabase 적용 (`db/migrations/001_initial_schema.sql`) |
 | 완료 | ERD 생성 및 실제 SQL과 대조 (`db/erd/`) |
-| 진행 중 | 초기 데이터(seed): 카테고리 SQL 작성됨, 지역 SQL 생성 예정, Supabase 미적용 |
+| 완료 | 초기 데이터(seed) Supabase 적용 (2026-10-05): 지역 5,067개 (`001_regions.sql`), 카테고리 16개 (`002_categories.sql`) |
 | 예정 | API 명세 (`docs/API.md`) |
 | 예정 | Backend / Frontend 기능 구현 (현재는 기본 구조만 있음) |
 
@@ -604,7 +606,7 @@ DB 설계 · ERD 검토                완료
     ↓
 Supabase 구축 (마이그레이션)      완료
     ↓
-초기 데이터(seed)                 [현재] 진행 중
+초기 데이터(seed)                 완료
     ↓
 API 명세
     ↓

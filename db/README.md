@@ -9,9 +9,10 @@ db/
 ├── migrations/                 # DB 구조 생성·변경 SQL
 │   └── 001_initial_schema.sql
 ├── seeds/                      # 초기 데이터 SQL
-│   ├── 001_regions.sql         # 법정동 지역 (생성기로 만든다 — 아직 생성 전)
+│   ├── 001_regions.sql         # 법정동 지역 5,067개 (생성기로 만든 파일 — 직접 수정하지 않는다)
 │   ├── 002_categories.sql      # 상품 카테고리 16개
-│   └── build_regions_seed.mjs  # 법정동 원본 파일 → 001_regions.sql 생성기
+│   ├── build_regions_seed.mjs  # 법정동 원본 파일 → 001_regions.sql 생성기
+│   └── source/                 # 법정동 원본 (다운로드한 zip과 압축을 푼 txt)
 ├── erd/                        # DB 관계 구조도
 │   ├── REOWN-ERD.mmd           # ERD 원본 (Mermaid, 실제 DB 카탈로그에서 자동 생성)
 │   ├── REOWN-ERD.png           # ERD 이미지
@@ -24,8 +25,8 @@ db/
 | 항목 | 상태 |
 |---|---|
 | `001_initial_schema.sql` | Supabase 적용 완료 (2026-10-04, SHA-256 `0c85efc4…`). 테이블 16개, RLS 16개 ON, 정책 0개 |
-| `001_regions.sql` | 아직 없음. 법정동 원본 파일을 받은 뒤 생성기로 만든다 |
-| `002_categories.sql` | 작성 완료, Supabase 미적용 |
+| `001_regions.sql` | Supabase 적용 완료 (2026-10-05). 5,067행 (읍·면·동 단위 현존 법정동). 원본: 행정표준코드관리시스템 "법정동코드 전체자료" (기준일 2026-10-01, `db/seeds/source/`), 원본 53,403행 |
+| `002_categories.sql` | Supabase 적용 완료 (2026-10-05). 16행 |
 
 ## DB 관리 원칙
 
