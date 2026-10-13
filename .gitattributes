@@ -12,3 +12,6 @@
 
 # 바이너리
 *.png   binary
+
+# 공식 법정동 원본: 줄바꿈 변환 없이 바이트 그대로 보존 (SHA-256 유지, API_DRAFT.md 결정 22)
+db/seeds/source/** -text

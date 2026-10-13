@@ -37,8 +37,10 @@ REOWN/
 ├── backend/           # Express 기본 구조만 (routes/controllers/services/repositories/middleware/utils 폴더는 비어 있음)
 ├── db/
 │   ├── migrations/001_initial_schema.sql   # 초기 스키마 (Supabase 적용 완료)
-│   ├── seeds/002_categories.sql            # 카테고리 16개 (미적용)
+│   ├── seeds/001_regions.sql               # 지역 5,067개 (Supabase 적용 완료)
+│   ├── seeds/002_categories.sql            # 카테고리 16개 (Supabase 적용 완료)
 │   ├── seeds/build_regions_seed.mjs        # 법정동 원본 → 001_regions.sql 생성기
+│   ├── seeds/source/                       # 법정동 원본 (zip, txt)
 │   ├── erd/REOWN-ERD.mmd / .png / mermaid.config.json
 │   └── README.md                            # DB 관리 원칙, 변경 요청 절차, 작업 규칙
 ├── docs/
@@ -60,7 +62,7 @@ DB 설계 · ERD 검토       완료 (docs/DATABASE.md v1.1)
 Supabase 구축            완료 (001_initial_schema.sql 적용)
 DB 관리 원칙 문서화      완료
 Git/GitHub 초기 설정     완료 (main, develop)
-초기 데이터(seed)        진행 중  (카테고리 검증 완료·미적용, 지역 원본 대기)
+초기 데이터(seed)        완료 (2026-10-05 Supabase 적용: 지역 5,067개, 카테고리 16개)
 API 명세                 진행 중  ← 현재 (docs/API_DRAFT.md 초안 작성, 결정 사항 확인 대기)
 Backend/Frontend 개발    그 이후
 ```
@@ -106,8 +108,8 @@ Backend/Frontend 개발    그 이후
 
 | 파일 | 상태 |
 |---|---|
-| `002_categories.sql` | 작성 완료, **Supabase 미적용**. 카테고리 16개: 디지털기기, 생활가전, 가구/인테리어, 생활/주방, 유아동, 여성의류, 여성잡화, 남성패션/잡화, 뷰티/미용, 스포츠/레저, 취미/게임/음반, 도서, 티켓/교환권, 반려동물용품, 식물, 기타중고물품 |
-| `001_regions.sql` | **아직 없음**. 행정안전부 법정동 코드 원본(CSV/TXT)을 받아 `build_regions_seed.mjs`로 생성 예정. 읍·면·동 단위 현존 코드만 사용 |
+| `002_categories.sql` | **Supabase 적용 완료 (2026-10-05)**. 카테고리 16개: 디지털기기, 생활가전, 가구/인테리어, 생활/주방, 유아동, 여성의류, 여성잡화, 남성패션/잡화, 뷰티/미용, 스포츠/레저, 취미/게임/음반, 도서, 티켓/교환권, 반려동물용품, 식물, 기타 중고물품 |
+| `001_regions.sql` | **Supabase 적용 완료 (2026-10-05)**. 5,067개 (읍·면·동 단위 현존 법정동). 원본: 행정표준코드관리시스템 "법정동코드 전체자료" (기준일 2026-10-01, 원본 53,403행). 시·도 16개 (광주광역시·전라남도는 원본에서 폐지되고 `전남광주통합특별시`로 통합) |
 
 ### 5.5 DB 접속 방식
 
@@ -143,8 +145,8 @@ Backend/Frontend 개발    그 이후
 
 ## 9. 남은 일 / 다음 단계
 
-1. **지역 seed**: 법정동 원본 파일 확보 → `001_regions.sql` 생성 → DB 관리자 승인 후 적용
-2. **카테고리 seed** `002_categories.sql` Supabase 적용 (DB 관리자 승인 후)
+1. ~~**지역 seed**: 법정동 원본 파일 확보 → `001_regions.sql` 생성 → DB 관리자 승인 후 적용~~ → 완료 (2026-10-05, 5,067개)
+2. ~~**카테고리 seed** `002_categories.sql` Supabase 적용 (DB 관리자 승인 후)~~ → 완료 (2026-10-05, 16개)
 3. **API 명세 확정**: `docs/API_DRAFT.md`의 `[결정 필요]` 항목(응답 형식, ID 타입, JWT 만료, 이미지 규칙, 메시지 전송 방식 등)을 정한 뒤 `docs/API.md`로 확정
 4. 백엔드에서 `.env` 읽기 방식 결정 (예: `node --env-file=../.env`)과 DB 연결 모듈 작성
 5. 이후 기능별 Backend/Frontend 개발 (`develop`에서 feature 브랜치)
