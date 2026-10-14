@@ -54,7 +54,7 @@ Frontend
 
 - React
 - Vite
-- JavaScript
+- TypeScript
 
 ## Backend
 
@@ -144,8 +144,8 @@ REOWN/
 │   │   ├── hooks/
 │   │   ├── services/
 │   │   ├── utils/
-│   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   ├── App.tsx
+│   │   └── main.tsx
 │   ├── index.html
 │   ├── package.json
 │   ├── vite.config.js

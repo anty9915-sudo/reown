@@ -30,7 +30,7 @@ REOWN은 사용자가 중고 물품을 등록하고 다른 사용자가 상품�
 
 - React
 - Vite
-- JavaScript
+- TypeScript
 
 ### Backend
 
@@ -86,8 +86,8 @@ REOWN/
 │   │   ├── hooks/
 │   │   ├── services/
 │   │   ├── utils/
-│   │   ├── App.jsx
-│   │   └── main.jsx
+│   │   ├── App.tsx
+│   │   └── main.tsx
 │   ├── index.html
 │   ├── package.json
 │   ├── vite.config.js
