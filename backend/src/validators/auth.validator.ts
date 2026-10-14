@@ -48,8 +48,14 @@ const validatePassword = (
     return;
   }
 
-  if (password.length < 8 || password.length > 20) {
-    details.password = '비밀번호는 8자 이상 20자 이하여야 합니다.';
+  if (password.length < 8 || password.length > 72) {
+    details.password = '비밀번호는 8자 이상 72자 이하여야 합니다.';
+    return;
+  }
+
+  // bcrypt는 72바이트까지만 사용하므로 다중 바이트 문자로 72바이트를 넘으면 거부한다.
+  if (Buffer.byteLength(password, 'utf8') > 72) {
+    details.password = '비밀번호는 UTF-8 기준 72바이트 이하여야 합니다.';
   }
 };
 
