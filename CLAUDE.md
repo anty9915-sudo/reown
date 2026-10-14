@@ -36,6 +36,7 @@ REOWN은 사용자가 중고 물품을 등록하고 다른 사용자가 상품�
 
 - Node.js
 - Express
+- TypeScript
 
 ### Database
 
@@ -92,7 +93,7 @@ REOWN/
 │   ├── vite.config.js
 │   └── eslint.config.js
 │
-├── backend/                  # Node.js + Express
+├── backend/                  # Node.js + Express + TypeScript
 │   ├── src/
 │   │   ├── routes/
 │   │   ├── controllers/
@@ -100,9 +101,10 @@ REOWN/
 │   │   ├── repositories/
 │   │   ├── middleware/
 │   │   ├── utils/
-│   │   ├── app.js
-│   │   └── server.js
-│   └── package.json
+│   │   ├── app.ts
+│   │   └── server.ts
+│   ├── package.json
+│   └── tsconfig.json
 │
 ├── db/                       # 실제 DB 작업 파일 (db/README.md 참고)
 │   ├── migrations/
@@ -289,7 +291,7 @@ Supabase 프로젝트는 **DB 관리자 1명**이 단독으로 관리한다. 세
 
 # 7. Backend 개발 원칙
 
-Backend는 Node.js + Express를 사용한다.
+Backend는 Node.js + Express + TypeScript를 사용한다.
 
 Backend의 주요 역할은 다음과 같다.
 
