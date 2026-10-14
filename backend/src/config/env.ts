@@ -35,7 +35,7 @@ const env = {
   port,
   databaseUrl: required('DATABASE_URL'),
   jwtSecret,
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '2h',
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '1h',
   frontendUrls,
 };
 

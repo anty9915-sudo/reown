@@ -188,7 +188,7 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 - 에러: 400 `VALIDATION_ERROR`, 409 `RESOURCE_CONFLICT` + `details.email` (EMAIL_TAKEN), 409 `RESOURCE_CONFLICT` + `details.nickname` (NICKNAME_TAKEN)
 - 처리: bcrypt(cost 10 이상) 해시만 저장 (10.1)
 - 비고: 지역 목록은 `regions` 기준 데이터(D7)에서 고른다. 지역 seed가 적용되기 전에는 회원가입을 할 수 없다
-- 구현 상태: `구현 수정 필요` — `regionId`를 받지 않음, 응답에 `expiresIn` 없음, `user.regionId` 문자열로 응답, JWT 기본 만료 2시간 (I3, I4). 비밀번호 8~72자·UTF-8 72바이트 검증은 I2에서 수정 완료
+- 구현 상태: `구현 수정 필요` — `regionId`를 받지 않음, 응답에 `expiresIn` 없음, `user.regionId` 문자열로 응답 (I4). 비밀번호 8~72자·UTF-8 72바이트 검증은 I2에서, JWT 기본 만료 1시간은 I3에서 수정 완료
 
 ### POST /auth/login — 로그인
 - 인증: 없음
@@ -197,7 +197,7 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 - 에러: 400 `VALIDATION_ERROR`, 401 `INVALID_CREDENTIALS` (이메일·비밀번호 중 무엇이 틀렸는지 구분하지 않음)
 - 토큰 만료: 1시간 (`expiresIn: 3600`, 초 단위). Refresh Token 없음
 - 비고: 회원가입 규칙(8~72자)으로 만든 비밀번호는 모두 로그인할 수 있어야 한다
-- 구현 상태: `구현 수정 필요` — 응답 형식, JWT 기본 만료 (I3, I4). 로그인 비밀번호 검증은 I2에서 회원가입과 같은 8~72자·UTF-8 72바이트로 수정 완료
+- 구현 상태: `구현 수정 필요` — 응답 형식(`expiresIn`, `user.region`) (I4). 로그인 비밀번호 검증은 I2에서 회원가입과 같은 8~72자·UTF-8 72바이트로, JWT 기본 만료 1시간은 I3에서 수정 완료
 
 ### GET /users/me — 내 정보
 - 인증: 필수
@@ -866,7 +866,7 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 |---|---|---|---|---|
 | I1 | CORS 허용 메서드 (`backend/src/app.ts`) | **수정 완료 (2026-10-14)**: 허용 메서드에 `PUT` 추가 (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`). 수정 전에는 `PUT`이 없어 브라우저의 사전 요청에서 `PUT` API가 막혔다 | `PUT` 포함 (좋아요·장바구니·차단·약속 변경·이미지 순서(U2)) | 결정 21, 0.8 |
 | I2 | 비밀번호 검증 범위 (`backend/src/validators/auth.validator.ts`) | **수정 완료 (2026-10-14)**: 회원가입·로그인 모두 8~72자, UTF-8 72바이트 초과 시 400. 수정 전에는 회원가입·로그인 모두 8~20자였다 | 8~72자, UTF-8 72바이트 초과 시 400. 회원가입 규칙으로 만든 비밀번호는 로그인할 수 있어야 함 | 결정 3, 18.2.4 |
-| I3 | JWT 만료 기본값 (`backend/src/config/env.ts`, `.env.example`) | `JWT_EXPIRES_IN` 기본 `2h` | 1시간, 응답에 `expiresIn: 3600` | 결정 3, API_DRAFT 20.4 |
+| I3 | JWT 만료 기본값 (`backend/src/config/env.ts`, `.env.example`) | **기본값 수정 완료 (2026-10-14)**: `JWT_EXPIRES_IN` 기본 `1h`, `.env.example`도 `1h`. 수정 전에는 `2h`였다. 응답의 `expiresIn`은 I4에서 처리한다 (미해결) | 1시간, 응답에 `expiresIn: 3600` | 결정 3, API_DRAFT 20.4 |
 | I4 | 회원가입·로그인 | 회원가입에 `regionId` 없음. 응답 `{ accessToken, user: { id, email, nickname, regionId } }` | 회원가입 `regionId` 필수·서버 검증. 응답 `{ accessToken, expiresIn, user: { id, email, nickname, region } }` | 결정 18, 20 |
 | I5 | 좋아요 | `POST /products/:productId/favorite`로 추가·취소 전환. 응답 `data: { productId, isFavorited, favoriteCount }` | `PUT` / `DELETE`, 응답 `data.favorite` | 결정 21, 20 |
 | I6 | 상품 수정 응답 | 수정된 DB 행(`id, categoryId, title, description, price, status, updatedAt`)을 반환 | `data.product`를 상품 상세와 같은 형식으로 | 결정 20 |
@@ -891,3 +891,4 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 | 2026-10-08 | v0.1~v0.3 (`main`, 팀원 문서) | 공통 API 규칙 초안(v0.1), 공통 규칙 간소화(v0.2), 카테고리·지역·상품 조회/수정/삭제·거래 상태 API 추가(v0.3). v1.1과 별도로 작성됨 |
 | 2026-10-14 | v1.2 | v1.1과 v0.3을 합침 (`docs/API_DRAFT.md` 18.2, 결정 20·21). 응답 형식 5종·camelCase·문자열 ID·`limit` 최대 100·공통 오류 code로 변경. 거래 생성·변경 경로를 `POST /products/:productId/transactions`, `PATCH /transactions/:transactionId`로 변경(v1.1의 거래 API 3개를 2개로 대체). 좋아요를 `PUT`/`DELETE`로 통일. 상품 목록 query 이름을 구현 기준으로 변경하고 `sido`·`sigungu` 필터, `status` 여러 개, `seller` 추가. 상품 상세에 `isMine`·`isInCart`·`myChatRoomId` 추가. 메시지 내역을 커서 방식으로 변경. v0.3의 CORS·서버 주소·입력값 검증 규칙 반영. JWT 1시간·비밀번호 8~72자 등 v1.1 업무 규칙 유지. 미결정 항목(18장)과 구현 수정 사항(19장) 추가. DB 구조 변경 없음 |
 | 2026-10-14 | v1.2 | 구현 상태 갱신: I1(CORS `PUT` 허용)·I2(비밀번호 8~72자·UTF-8 72바이트 검증) 수정 완료 반영. 명세 내용 변경 없음 |
+| 2026-10-14 | v1.2 | 구현 상태 갱신: I3(JWT 기본 만료 `1h`) 기본값 수정 완료 반영. 응답 `expiresIn`은 I4에서 처리. 명세 내용 변경 없음 |
