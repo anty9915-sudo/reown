@@ -1,7 +1,7 @@
 # REOWN API 명세
 
 > 상태: **v1.2 (2026-10-14)**. 백엔드·프론트엔드 구현의 기준 문서다.
-> 기준: `docs/DATABASE.md` v1.1 (D1~D28, 9장 권한 매트릭스, 10~12장), `db/migrations/001_initial_schema.sql`, `docs/API_DRAFT.md` 18장(결정 1~23)
+> 기준: `docs/DATABASE.md` v1.1 (D1~D28, 9장 권한 매트릭스, 10~12장), `db/migrations/001_initial_schema.sql`, `docs/API_DRAFT.md` 18장(결정 1~25)
 > 전제: **DB 구조를 바꾸지 않는다.** 모든 API는 기존 16개 테이블과 View `user_trust_stats`만 사용한다.
 > v1.2는 확정본 v1.1(`develop`)과 팀원 문서 v0.3(`main`)을 `docs/API_DRAFT.md` 18.2(결정 20·21)에 따라 합친 문서다. v1.1의 기능 범위·권한·업무 규칙은 그대로 두고, 응답 형식과 일부 경로만 바꿨다.
 > 아직 정하지 않은 항목은 **18장 미결정 항목(U1~U12)**에 모았고, 본문에는 `미결정 (U번호)`로 표시했다. 구현이 이 명세와 다른 곳은 **19장 구현 수정 사항(I번호)**에 모았다.
