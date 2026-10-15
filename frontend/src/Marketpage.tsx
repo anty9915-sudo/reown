@@ -28,7 +28,6 @@ function MarketPage() {
       return matchesCategory && matchesSearch
     })
 
-    if (activeTab === '최신순') return filtered.slice().reverse()
     if (activeTab === '인기순') {
       return filtered.slice().sort((a, b) => b.likes - a.likes)
     }

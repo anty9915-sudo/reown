@@ -1,7 +1,10 @@
 .login-page {
   --login-green: #3c7653;
   --login-dark: #28583d;
+  width: 100%;
+  max-width: none;
   min-height: 100vh;
+  margin: 0;
   padding: 0 7.3%;
   color: #263027;
   background:

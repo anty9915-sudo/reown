@@ -6,6 +6,9 @@ import App from './App'
 import MarketPage from './Marketpage'
 import LoginPage from './login'
 import SignupPage from './loginnew'
+import SafeDealPage from './safedeal'
+import LocationPage from './location'
+import SellPage from './sell'
 
 const rootElement = document.getElementById('root')
 
@@ -21,6 +24,9 @@ createRoot(rootElement).render(
         <Route path="/market" element={<MarketPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/safedeal" element={<SafeDealPage />} />
+        <Route path="/location" element={<LocationPage />} />
+        <Route path="/sell" element={<SellPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

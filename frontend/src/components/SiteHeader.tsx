@@ -22,12 +22,22 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
           >
             중고거래
           </NavLink>
-          <a className="nav-link" href="#popular">
+          <NavLink
+            className={({ isActive }) =>
+              `nav-link${isActive ? ' active' : ''}`
+            }
+            to="/location"
+          >
             동네생활
-          </a>
-          <a className="nav-link" href="#safe-trade">
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `nav-link${isActive ? ' active' : ''}`
+            }
+            to="/safedeal"
+          >
             안전거래
-          </a>
+          </NavLink>
         </nav>
         <div className="header-actions">
           <label className="search-box">
@@ -45,9 +55,9 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
           <Link className="login-button" to="/login">
             로그인
           </Link>
-          <button className="sell-button" type="button">
+          <Link className="sell-button" to="/sell">
             <span aria-hidden="true">＋</span> 판매하기
-          </button>
+          </Link>
         </div>
       </div>
     </header>

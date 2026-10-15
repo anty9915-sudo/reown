@@ -1,36 +1,55 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import "./App.css";
 import { products } from "./data/products";
 import { imageUrl } from "./utils/imageUrl";
 import SiteHeader from "./components/SiteHeader";
 import { formatPrice } from "./utils/formatprice";
-import RegionSelector from "./components/RegionSelector";
-import {
-  defaultRegion,
-  getSelectedRegion,
-  saveSelectedRegion,
-} from "./utils/selectedRegion";
+
+const allRegionsLabel = "전체지역";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [search, setSearch] = useState("");
   const [favorites, setFavorites] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState("추천");
-  const [selectedRegion, setSelectedRegion] = useState(getSelectedRegion);
+  const [selectedRegion, setSelectedRegion] = useState(allRegionsLabel);
+  const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false);
+
+  const regions = useMemo(
+    () => [...new Set(products.map((product) => product.location))],
+    [],
+  );
+  const featuredProduct = useMemo(
+    () =>
+      products.find((product) => product.location === selectedRegion) ??
+      products[0],
+    [selectedRegion],
+  );
 
   const visibleProducts = useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       const matchesCategory =
         selectedCategory === "전체" || product.category === selectedCategory;
+      const matchesRegion =
+        selectedRegion === allRegionsLabel ||
+        product.location === selectedRegion;
       const matchesSearch =
         !keyword ||
         `${product.title} ${product.category} ${product.location}`
           .toLowerCase()
           .includes(keyword);
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesRegion && matchesSearch;
     });
-  }, [search, selectedCategory]);
+
+    if (activeTab === "인기순") {
+      return filtered
+        .slice()
+        .sort((a, b) => b.likes - a.likes);
+    }
+    return filtered;
+  }, [activeTab, search, selectedCategory, selectedRegion]);
 
   const toggleFavorite = (id: number) => {
     setFavorites((current) =>
@@ -74,35 +93,86 @@ function App() {
               </span>
             </div>
           </div>
-          <div className="hero-visual" aria-hidden="true">
-            <div className="hero-orbit orbit-one" />
-            <div className="hero-orbit orbit-two" />
-            <div className="hero-note note-top">
+          <div className="hero-visual">
+            <div aria-hidden="true" className="hero-orbit orbit-one" />
+            <div aria-hidden="true" className="hero-orbit orbit-two" />
+            <div aria-hidden="true" className="hero-note note-top">
               <span>✦</span> 좋은 물건의 새로운 시작
             </div>
-            <div className="hero-product-card">
-              <img src={imageUrl("photo-1523275335684-37898b6baf30")} alt="" />
-              <div className="hero-product-info">
-                <div>
-                  <span>오늘의 발견</span>
-                  <span className="live-dot" />
+            {featuredProduct && (
+              <div className="hero-product-card">
+                <img
+                  src={imageUrl(featuredProduct.image)}
+                  alt={featuredProduct.title}
+                />
+                <div className="hero-product-info">
+                  <div>
+                    <span>오늘의 발견 · {featuredProduct.location}</span>
+                    <span className="live-dot" />
+                  </div>
+                  <strong>{featuredProduct.title}</strong>
+                  <b>{formatPrice(featuredProduct.price)}</b>
                 </div>
-                <strong>클래식 손목시계</strong>
-                <b>68,000원</b>
               </div>
-            </div>
-            <div className="floating-tag tag-left">
+            )}
+            <div aria-hidden="true" className="floating-tag tag-left">
               <span>♡</span> 마음에 쏙
             </div>
-            <div className="floating-tag tag-right">
+            <div aria-hidden="true" className="floating-tag tag-right">
               <span>↗</span> 동네 직거래
             </div>
-            <div className="hero-sparkle sparkle-one">✳</div>
-            <div className="hero-sparkle sparkle-two">✦</div>
+            <div aria-hidden="true" className="hero-sparkle sparkle-one">✳</div>
+            <div aria-hidden="true" className="hero-sparkle sparkle-two">✦</div>
           </div>
-          <div className="hero-location">
-            <span aria-hidden="true">⌖</span> {selectedRegion || defaultRegion}{" "}
-            <span className="location-chevron">⌄</span>
+          <div className="hero-location-selector">
+            <button
+              aria-expanded={isRegionSelectorOpen}
+              aria-haspopup="dialog"
+              className="hero-location"
+              onClick={() => setIsRegionSelectorOpen((isOpen) => !isOpen)}
+              type="button"
+            >
+              <span aria-hidden="true">⌖</span>
+              <span className="hero-location-name">{selectedRegion}</span>
+              <span aria-hidden="true" className="location-chevron">⌄</span>
+            </button>
+            {isRegionSelectorOpen && (
+              <div
+                aria-label="지역 선택"
+                className="home-region-popover hero-region-popover"
+                role="dialog"
+              >
+                <span className="home-region-label">전체 지역</span>
+                <button
+                  aria-pressed={selectedRegion === allRegionsLabel}
+                  className={`home-region-option${selectedRegion === allRegionsLabel ? " selected" : ""}`}
+                  onClick={() => {
+                    setSelectedRegion(allRegionsLabel);
+                    setIsRegionSelectorOpen(false);
+                  }}
+                  type="button"
+                >
+                  전체지역
+                </button>
+                <span className="home-region-label">지역 카테고리</span>
+                <div className="home-region-options">
+                  {regions.map((region) => (
+                    <button
+                      aria-pressed={selectedRegion === region}
+                      className={`home-region-option${selectedRegion === region ? " selected" : ""}`}
+                      key={region}
+                      onClick={() => {
+                        setSelectedRegion(region);
+                        setIsRegionSelectorOpen(false);
+                      }}
+                      type="button"
+                    >
+                      {region}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
@@ -177,13 +247,6 @@ function App() {
                 <span className="heading-count">{visibleProducts.length}</span>
               </h2>
             </div>
-            <RegionSelector
-              selectedRegion={selectedRegion}
-              onSelect={(region) => {
-                saveSelectedRegion(region);
-                setSelectedRegion(region);
-              }}
-            />
           </div>
           <div className="market-toolbar">
             <div className="market-tabs" role="tablist" aria-label="매물 정렬">
@@ -261,6 +324,7 @@ function App() {
                 onClick={() => {
                   setSearch("");
                   setSelectedCategory("전체");
+                  setSelectedRegion(allRegionsLabel);
                 }}
               >
                 전체 매물 보기
@@ -281,9 +345,9 @@ function App() {
             <h2>처음 거래도 안심할 수 있도록</h2>
             <p>reown의 안전결제로 소중한 거래를 지켜드려요.</p>
           </div>
-          <a href="#market">
+          <Link to="/safedeal">
             안전거래 알아보기 <span aria-hidden="true">→</span>
-          </a>
+          </Link>
         </section>
       </main>
 
@@ -295,9 +359,9 @@ function App() {
         <p>가까운 이웃과 함께하는 지속 가능한 거래</p>
         <span>© 2026 reown. All rights reserved.</span>
       </footer>
-      <button className="mobile-sell-button" type="button">
+      <Link className="mobile-sell-button" to="/sell">
         <span aria-hidden="true">＋</span> 판매하기
-      </button>
+      </Link>
     </div>
   );
 }

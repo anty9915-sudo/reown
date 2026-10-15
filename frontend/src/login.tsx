@@ -1,16 +1,68 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import './Login.css'
+
+type LoginResponse = {
+  data?: {
+    accessToken?: string
+  }
+  error?: {
+    message?: string
+  }
+}
+
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? ''
+const accessTokenKey = 'reown-access-token'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberLogin, setRememberLogin] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [notice, setNotice] = useState('')
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setNotice('로그인 기능은 아직 연결되지 않았어요. 조금만 기다려 주세요.')
+    setNotice('')
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const result = (await response.json()) as LoginResponse
+
+      if (!response.ok) {
+        setNotice(result.error?.message ?? '로그인에 실패했습니다. 입력 정보를 확인해 주세요.')
+        return
+      }
+
+      const accessToken = result.data?.accessToken
+      if (!accessToken) {
+        setNotice('로그인 응답에 인증 정보가 없습니다. 잠시 후 다시 시도해 주세요.')
+        return
+      }
+
+      window.localStorage.removeItem(accessTokenKey)
+      window.sessionStorage.removeItem(accessTokenKey)
+      const storage = rememberLogin ? window.localStorage : window.sessionStorage
+      storage.setItem(accessTokenKey, accessToken)
+
+      const redirectTo =
+        (location.state as { from?: unknown } | null)?.from === '/safedeal'
+          ? '/safedeal'
+          : '/'
+      navigate(redirectTo, { replace: true })
+    } catch {
+      setNotice('서버에 연결할 수 없습니다. 백엔드 서버가 실행 중인지 확인해 주세요.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -91,7 +143,11 @@ function LoginPage() {
 
             <div className="login-options">
               <label className="remember-option">
-                <input type="checkbox" />
+                <input
+                  checked={rememberLogin}
+                  onChange={(event) => setRememberLogin(event.target.checked)}
+                  type="checkbox"
+                />
                 <span>로그인 상태 유지</span>
               </label>
               <button className="forgot-password" type="button">
@@ -99,7 +155,9 @@ function LoginPage() {
               </button>
             </div>
 
-            <button className="login-submit" type="submit">로그인</button>
+            <button className="login-submit" disabled={isSubmitting} type="submit">
+              {isSubmitting ? '로그인 중...' : '로그인'}
+            </button>
             {notice && <p className="login-notice" role="status">{notice}</p>}
           </form>
 
