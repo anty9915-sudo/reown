@@ -1,122 +1,305 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useMemo, useState } from "react";
+import "./App.css";
+import { products } from "./data/products";
+import { imageUrl } from "./utils/imageUrl";
+import SiteHeader from "./components/SiteHeader";
+import { formatPrice } from "./utils/formatprice";
+import RegionSelector from "./components/RegionSelector";
+import {
+  defaultRegion,
+  getSelectedRegion,
+  saveSelectedRegion,
+} from "./utils/selectedRegion";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [search, setSearch] = useState("");
+  const [favorites, setFavorites] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState("추천");
+  const [selectedRegion, setSelectedRegion] = useState(getSelectedRegion);
+
+  const visibleProducts = useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    return products.filter((product) => {
+      const matchesCategory =
+        selectedCategory === "전체" || product.category === selectedCategory;
+      const matchesSearch =
+        !keyword ||
+        `${product.title} ${product.category} ${product.location}`
+          .toLowerCase()
+          .includes(keyword);
+      return matchesCategory && matchesSearch;
+    });
+  }, [search, selectedCategory]);
+
+  const toggleFavorite = (id: number) => {
+    setFavorites((current) =>
+      current.includes(id)
+        ? current.filter((favorite) => favorite !== id)
+        : [...current, id],
+    );
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell">
+      <SiteHeader search={search} onSearchChange={setSearch} />
 
-      <div className="ticks"></div>
+      <main>
+        <section className="hero" aria-label="동네 중고거래">
+          <div className="hero-copy">
+            <div className="eyebrow">
+              <span className="eyebrow-dot" /> 우리 동네 취향 거래
+            </div>
+            <h1>
+              잘 쓰던 물건,
+              <br />
+              <span>새 주인을 만나도록.</span>
+            </h1>
+            <p>
+              가까운 이웃과 나누는 기분 좋은 거래,
+              <br className="mobile-break" /> reown에서 시작해요.
+            </p>
+            <a className="hero-cta" href="#market">
+              지금 구경하기 <span aria-hidden="true">↗</span>
+            </a>
+            <div className="hero-proof">
+              <div className="avatar-stack" aria-hidden="true">
+                <span>민</span>
+                <span>서</span>
+                <span>지</span>
+                <span>＋</span>
+              </div>
+              <span>
+                <strong>2,400+</strong>명의 이웃이 함께하고 있어요
+              </span>
+            </div>
+          </div>
+          <div className="hero-visual" aria-hidden="true">
+            <div className="hero-orbit orbit-one" />
+            <div className="hero-orbit orbit-two" />
+            <div className="hero-note note-top">
+              <span>✦</span> 좋은 물건의 새로운 시작
+            </div>
+            <div className="hero-product-card">
+              <img src={imageUrl("photo-1523275335684-37898b6baf30")} alt="" />
+              <div className="hero-product-info">
+                <div>
+                  <span>오늘의 발견</span>
+                  <span className="live-dot" />
+                </div>
+                <strong>클래식 손목시계</strong>
+                <b>68,000원</b>
+              </div>
+            </div>
+            <div className="floating-tag tag-left">
+              <span>♡</span> 마음에 쏙
+            </div>
+            <div className="floating-tag tag-right">
+              <span>↗</span> 동네 직거래
+            </div>
+            <div className="hero-sparkle sparkle-one">✳</div>
+            <div className="hero-sparkle sparkle-two">✦</div>
+          </div>
+          <div className="hero-location">
+            <span aria-hidden="true">⌖</span> {selectedRegion || defaultRegion}{" "}
+            <span className="location-chevron">⌄</span>
+          </div>
+        </section>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <section className="category-section" aria-label="카테고리">
+          <div className="category-heading">
+            <div>
+              <span className="section-kicker">EXPLORE BY CATEGORY</span>
+              <h2>무엇을 찾고 있나요?</h2>
+            </div>
+            <a className="text-link" href="#market">
+              전체 카테고리 <span aria-hidden="true">→</span>
+            </a>
+          </div>
+          <div className="category-list">
+            <button
+              className={`category-item ${selectedCategory === "전체" ? "selected" : ""}`}
+              onClick={() => setSelectedCategory("전체")}
+              type="button"
+            >
+              <span className="category-icon all-icon">✳</span>
+              <span>전체보기</span>
+            </button>
+            <button
+              className={`category-item ${selectedCategory === "디지털기기" ? "selected" : ""}`}
+              onClick={() => setSelectedCategory("디지털기기")}
+              type="button"
+            >
+              <span className="category-icon">⌁</span>
+              <span>디지털기기</span>
+            </button>
+            <button
+              className={`category-item ${selectedCategory === "가구·인테리어" ? "selected" : ""}`}
+              onClick={() => setSelectedCategory("가구·인테리어")}
+              type="button"
+            >
+              <span className="category-icon">⌂</span>
+              <span>가구·인테리어</span>
+            </button>
+            <button
+              className={`category-item ${selectedCategory === "패션의류" ? "selected" : ""}`}
+              onClick={() => setSelectedCategory("패션의류")}
+              type="button"
+            >
+              <span className="category-icon">♧</span>
+              <span>패션의류</span>
+            </button>
+            <button
+              className={`category-item ${selectedCategory === "생활가전" ? "selected" : ""}`}
+              onClick={() => setSelectedCategory("생활가전")}
+              type="button"
+            >
+              <span className="category-icon">◉</span>
+              <span>생활가전</span>
+            </button>
+            <button
+              className={`category-item ${selectedCategory === "취미·게임" ? "selected" : ""}`}
+              onClick={() => setSelectedCategory("취미·게임")}
+              type="button"
+            >
+              <span className="category-icon">♬</span>
+              <span>취미·게임</span>
+            </button>
+          </div>
+        </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        <section className="market-section" id="market">
+          <div className="market-heading">
+            <div>
+              <span className="section-kicker">YOUR NEIGHBORHOOD FINDS</span>
+              <h2>
+                지금 우리 동네 매물{" "}
+                <span className="heading-count">{visibleProducts.length}</span>
+              </h2>
+            </div>
+            <RegionSelector
+              selectedRegion={selectedRegion}
+              onSelect={(region) => {
+                saveSelectedRegion(region);
+                setSelectedRegion(region);
+              }}
+            />
+          </div>
+          <div className="market-toolbar">
+            <div className="market-tabs" role="tablist" aria-label="매물 정렬">
+              {["추천", "최신순", "인기순"].map((tab) => (
+                <button
+                  aria-selected={activeTab === tab}
+                  className={activeTab === tab ? "tab-active" : ""}
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  role="tab"
+                  type="button"
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+            <span className="result-caption">
+              가까운 순으로 보여드려요 <span aria-hidden="true">⌖</span>
+            </span>
+          </div>
+          {visibleProducts.length > 0 ? (
+            <div className="product-grid">
+              {visibleProducts.map((product) => (
+                <article className="product-card" key={product.id}>
+                  <a
+                    className="product-image"
+                    href="#market"
+                    aria-label={`${product.title} 상세 보기`}
+                  >
+                    <img src={imageUrl(product.image)} alt={product.title} />
+                    {product.badge && (
+                      <span className="product-badge">{product.badge}</span>
+                    )}
+                    <button
+                      aria-label={
+                        favorites.includes(product.id) ? "찜 취소" : "찜하기"
+                      }
+                      aria-pressed={favorites.includes(product.id)}
+                      className={`favorite-button ${favorites.includes(product.id) ? "is-favorite" : ""}`}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        toggleFavorite(product.id);
+                      }}
+                      type="button"
+                    >
+                      {favorites.includes(product.id) ? "♥" : "♡"}
+                    </button>
+                  </a>
+                  <div className="product-details">
+                    <span className="product-category">{product.category}</span>
+                    <h3>{product.title}</h3>
+                    <strong className="product-price">
+                      {formatPrice(product.price)}
+                    </strong>
+                    <div className="product-meta">
+                      <span>
+                        {product.location} · {product.time}
+                      </span>
+                      <span className="product-likes">
+                        <span aria-hidden="true">♡</span>{" "}
+                        {product.likes + Number(favorites.includes(product.id))}
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <span aria-hidden="true">⌕</span>
+              <strong>찾으시는 매물이 없어요</strong>
+              <p>검색어나 카테고리를 바꿔 다시 찾아보세요.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setSelectedCategory("전체");
+                }}
+              >
+                전체 매물 보기
+              </button>
+            </div>
+          )}
+          <a className="more-button" href="/market">
+            우리 동네 매물 더 보기 <span aria-hidden="true">↓</span>
+          </a>
+        </section>
+
+        <section className="safe-trade-banner" id="safe-trade">
+          <div className="safe-icon" aria-hidden="true">
+            ✓
+          </div>
+          <div>
+            <span className="section-kicker">TRADE WITH PEACE OF MIND</span>
+            <h2>처음 거래도 안심할 수 있도록</h2>
+            <p>reown의 안전결제로 소중한 거래를 지켜드려요.</p>
+          </div>
+          <a href="#market">
+            안전거래 알아보기 <span aria-hidden="true">→</span>
+          </a>
+        </section>
+      </main>
+
+      <footer className="site-footer">
+        <a className="brand footer-brand" href="#">
+          <span className="brand-mark">r</span>
+          <span>reown</span>
+        </a>
+        <p>가까운 이웃과 함께하는 지속 가능한 거래</p>
+        <span>© 2026 reown. All rights reserved.</span>
+      </footer>
+      <button className="mobile-sell-button" type="button">
+        <span aria-hidden="true">＋</span> 판매하기
+      </button>
+    </div>
+  );
 }
 
-export default App
+export default App;
