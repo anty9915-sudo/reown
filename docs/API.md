@@ -1,10 +1,10 @@
 # REOWN API 명세
 
 > 상태: **v1.2 (2026-10-14)**. 백엔드·프론트엔드 구현의 기준 문서다.
-> 기준: `docs/DATABASE.md` v1.1 (D1~D28, 9장 권한 매트릭스, 10~12장), `db/migrations/001_initial_schema.sql`, `docs/API_DRAFT.md` 18장(결정 1~23)
+> 기준: `docs/DATABASE.md` v1.1 (D1~D28, 9장 권한 매트릭스, 10~12장), `db/migrations/001_initial_schema.sql`, `docs/API_DRAFT.md` 18장(결정 1~25)
 > 전제: **DB 구조를 바꾸지 않는다.** 모든 API는 기존 16개 테이블과 View `user_trust_stats`만 사용한다.
 > v1.2는 확정본 v1.1(`develop`)과 팀원 문서 v0.3(`main`)을 `docs/API_DRAFT.md` 18.2(결정 20·21)에 따라 합친 문서다. v1.1의 기능 범위·권한·업무 규칙은 그대로 두고, 응답 형식과 일부 경로만 바꿨다.
-> 아직 정하지 않은 항목은 **18장 미결정 항목(U1~U11)**에 모았고, 본문에는 `미결정 (U번호)`로 표시했다. 구현이 이 명세와 다른 곳은 **19장 구현 수정 사항(I번호)**에 모았다.
+> 아직 정하지 않은 항목은 **18장 미결정 항목(U1~U12)**에 모았고, 본문에는 `미결정 (U번호)`로 표시했다. 구현이 이 명세와 다른 곳은 **19장 구현 수정 사항(I번호)**에 모았다.
 
 ---
 
@@ -141,13 +141,14 @@
 
 ```text
 UserSummary     { id, nickname }
-PublicProfile   { id, nickname, region: RegionName, mannerTemperature, avgRating, reviewCount, createdAt }
-RegionName      { id, sido, sigungu, eupmyeondong }
+PublicProfile   { id, nickname, region: RegionName, mannerTemperature, avgRating, reviewCount, createdAt }   // 지역이 NULL인 회원의 region: 미결정 (U12)
+RegionName      { id, sido, sigungu: string | null, eupmyeondong }
 ProductSummary  { id, title, price, status, thumbnailUrl, region: RegionName, favoriteCount, createdAt, isDeleted }   // 미결정 (U6)
 ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1/object/public/reown-product-images/{storage_path}
 ```
 
 - `mannerTemperature`, `avgRating`, `reviewCount`는 View `user_trust_stats`에서 계산한다 (D3). 후기가 없으면 36.5 / null / 0.
+- `RegionName.sigungu`는 `string | null`이다. 세종특별자치시처럼 시·군·구가 없는 지역은 `null`이다 (`regions.sigungu` NULL 허용). 지역 API 응답의 `sigungu`도 같다.
 - `email`은 본인 정보(`GET /users/me` 등)와 인증 결과에서만 반환한다. `password_hash`는 어떤 응답에도 넣지 않는다.
 - `ProductSummary`는 v1.1의 필드를 camelCase로 옮긴 것이다. 현재 구현의 목록 항목은 `viewCount`, `category: { id, name }`를 더 담고 `isDeleted`가 없다. 어느 쪽으로 맞출지는 **미결정 (U6)**.
 - Storage 연결 전까지 구현은 `thumbnailUrl`을 `null`, `images`를 `[]`로 반환한다 (이미지 기능 미구현).
@@ -182,8 +183,10 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
   - password: **8~72자**. bcrypt는 **72바이트**까지만 사용하므로 UTF-8 기준 72바이트를 넘으면 400 (한글 등 다중 바이트 문자를 포함한 경우) (결정 3)
   - nickname: `^[가-힣a-zA-Z0-9]{2,20}$` (D17)
   - regionId: **필수** (결정 18). 존재하는 `regions.id`인지 서버가 확인한다. 누락·`null`·ID 형식이 아님·존재하지 않는 지역 → 400 `VALIDATION_ERROR` + `details.regionId`
-  - 따라서 모든 회원은 가입 시점부터 지역이 설정되어 있다. 가입 후에는 다른 지역으로 변경할 수 있지만 NULL로 해제할 수는 없다 (`PATCH /users/me`, 결정 11)
+  - 따라서 이 API로 가입한 회원은 가입 시점부터 지역이 설정되어 있다. 가입 후에는 다른 지역으로 변경할 수 있지만 NULL로 해제할 수는 없다 (`PATCH /users/me`, 결정 11). 결정 18 이전 데이터 등 예외는 로그인의 결정 24를 참고한다
 - 응답: ④ `201 { data: { accessToken, expiresIn, user: { id, email, nickname, region: RegionName } } }`
+  - `user.region`: 회원가입은 지역이 필수(결정 18)이므로 항상 `RegionName` 객체다 (`null`이 아니다)
+  - `expiresIn`: 발급한 Access Token의 `exp − iat`(초). 기본 설정에서 `3600` (결정 25)
 - 권한: 없음
 - 에러: 400 `VALIDATION_ERROR`, 409 `RESOURCE_CONFLICT` + `details.email` (EMAIL_TAKEN), 409 `RESOURCE_CONFLICT` + `details.nickname` (NICKNAME_TAKEN)
 - 처리: bcrypt(cost 10 이상) 해시만 저장 (10.1)
@@ -193,15 +196,18 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 ### POST /auth/login — 로그인
 - 인증: 없음
 - 요청: `{ email, password }`
-- 응답: ④ `200 { data: { accessToken, expiresIn, user: { id, email, nickname, region: RegionName } } }`
+- 응답: ④ `200 { data: { accessToken, expiresIn, user: { id, email, nickname, region: RegionName | null } } }`
+  - `user.region` (결정 24, 예외 처리 규칙): `users.region_id`가 NULL인 회원도 로그인을 거부하지 않고 `region: null`로 응답한다. 회원가입에서 지역이 필수(결정 18)이므로 정상 흐름에서는 발생하지 않는다. 이런 회원이 실제로 있는지는 확인하지 않았다 (API_DRAFT 19.1 #5)
+  - `expiresIn`: 발급한 Access Token의 `exp − iat`(초). 기본 설정에서 `3600` (결정 25)
 - 에러: 400 `VALIDATION_ERROR`, 401 `INVALID_CREDENTIALS` (이메일·비밀번호 중 무엇이 틀렸는지 구분하지 않음)
-- 토큰 만료: 1시간 (`expiresIn: 3600`, 초 단위). Refresh Token 없음
+- 토큰 만료: 기본 1시간 (결정 3). Refresh Token 없음
 - 비고: 회원가입 규칙(8~72자)으로 만든 비밀번호는 모두 로그인할 수 있어야 한다
 - 구현 상태: `구현 수정 필요` — 응답 형식(`expiresIn`, `user.region`) (I4). 로그인 비밀번호 검증은 I2에서 회원가입과 같은 8~72자·UTF-8 72바이트로, JWT 기본 만료 1시간은 I3에서 수정 완료
 
 ### GET /users/me — 내 정보
 - 인증: 필수
 - 응답: ① `data.user: { id, email, nickname, region: RegionName, mannerTemperature, avgRating, reviewCount, createdAt }`
+  - 지역이 NULL인 회원의 `region` 처리는 **미결정 (U12)**
 - 에러: 401
 - 구현 상태: `미구현`
 
@@ -855,6 +861,7 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 | U9 | 응답 종류 5가지에 바로 맞지 않는 응답: 이미지 추가·삭제·순서 변경 결과(`ImageItem[]`), 제안 내역의 `remainingOffers24h`, 장바구니 `data.cartItem`의 필드, 차단 결과 본문, 알림 모두 읽음의 `updated` | 결정 20은 결과 이름이나 필드를 지정하지 않음 | 팀 | 5장, 7장, 9장, 14장, 15장 |
 | U10 | 프론트엔드 토큰 보관 위치와 키 이름 (v0.3: `sessionStorage`의 `accessToken`) | v0.3에만 있고 결정에도 구현에도 없음 | 프론트엔드 담당 | 0.1 |
 | U11 | v0.3의 "기능별 API 작성 양식"(8장)과 "공통 테스트 항목"(9장)을 이 문서에 넣을지 | 문서 구성 선택의 문제이며 결정 기록이 없음. v1.2에는 넣지 않았다 | 팀 | — |
+| U12 | 지역이 NULL인 회원의 `GET /users/me`·공개 프로필(`PublicProfile`)에서 `region`을 `null`로 응답할지 | 결정 24는 로그인 응답만 정함 | 팀 | 0.7, 1장 |
 
 ---
 
@@ -866,8 +873,8 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 |---|---|---|---|---|
 | I1 | CORS 허용 메서드 (`backend/src/app.ts`) | **수정 완료 (2026-10-14)**: 허용 메서드에 `PUT` 추가 (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`). 수정 전에는 `PUT`이 없어 브라우저의 사전 요청에서 `PUT` API가 막혔다 | `PUT` 포함 (좋아요·장바구니·차단·약속 변경·이미지 순서(U2)) | 결정 21, 0.8 |
 | I2 | 비밀번호 검증 범위 (`backend/src/validators/auth.validator.ts`) | **수정 완료 (2026-10-14)**: 회원가입·로그인 모두 8~72자, UTF-8 72바이트 초과 시 400. 수정 전에는 회원가입·로그인 모두 8~20자였다 | 8~72자, UTF-8 72바이트 초과 시 400. 회원가입 규칙으로 만든 비밀번호는 로그인할 수 있어야 함 | 결정 3, 18.2.4 |
-| I3 | JWT 만료 기본값 (`backend/src/config/env.ts`, `.env.example`) | **기본값 수정 완료 (2026-10-14)**: `JWT_EXPIRES_IN` 기본 `1h`, `.env.example`도 `1h`. 수정 전에는 `2h`였다. 응답의 `expiresIn`은 I4에서 처리한다 (미해결) | 1시간, 응답에 `expiresIn: 3600` | 결정 3, API_DRAFT 20.4 |
-| I4 | 회원가입·로그인 | 회원가입에 `regionId` 없음. 응답 `{ accessToken, user: { id, email, nickname, regionId } }` | 회원가입 `regionId` 필수·서버 검증. 응답 `{ accessToken, expiresIn, user: { id, email, nickname, region } }` | 결정 18, 20 |
+| I3 | JWT 만료 기본값 (`backend/src/config/env.ts`, `.env.example`) | **기본값 수정 완료 (2026-10-14)**: `JWT_EXPIRES_IN` 기본 `1h`, `.env.example`도 `1h`. 수정 전에는 `2h`였다. 응답의 `expiresIn`은 I4에서 처리한다 (미해결) | 1시간, 응답 `expiresIn` = 발급 토큰의 `exp − iat` (기본 `3600`) | 결정 3·25, API_DRAFT 20.4 |
+| I4 | 회원가입·로그인 | 회원가입에 `regionId` 없음. 응답 `{ accessToken, user: { id, email, nickname, regionId } }` | 회원가입 `regionId` 필수·서버 검증. 응답 `{ accessToken, expiresIn, user: { id, email, nickname, region } }`. 로그인은 `region: RegionName \| null` (결정 24) | 결정 18, 20, 24, 25 |
 | I5 | 좋아요 | `POST /products/:productId/favorite`로 추가·취소 전환. 응답 `data: { productId, isFavorited, favoriteCount }` | `PUT` / `DELETE`, 응답 `data.favorite` | 결정 21, 20 |
 | I6 | 상품 수정 응답 | 수정된 DB 행(`id, categoryId, title, description, price, status, updatedAt`)을 반환 | `data.product`를 상품 상세와 같은 형식으로 | 결정 20 |
 | I7 | 상품 수정 시 가격 인하 처리 | 없음 | 대기 제안 자동 `REJECTED` + 구매자에게 `PRICE_OFFER_REJECTED` 알림 | 결정 8, 14 |
@@ -892,3 +899,4 @@ ImageItem       { id, url, sortOrder }        // url = {SUPABASE_URL}/storage/v1
 | 2026-10-14 | v1.2 | v1.1과 v0.3을 합침 (`docs/API_DRAFT.md` 18.2, 결정 20·21). 응답 형식 5종·camelCase·문자열 ID·`limit` 최대 100·공통 오류 code로 변경. 거래 생성·변경 경로를 `POST /products/:productId/transactions`, `PATCH /transactions/:transactionId`로 변경(v1.1의 거래 API 3개를 2개로 대체). 좋아요를 `PUT`/`DELETE`로 통일. 상품 목록 query 이름을 구현 기준으로 변경하고 `sido`·`sigungu` 필터, `status` 여러 개, `seller` 추가. 상품 상세에 `isMine`·`isInCart`·`myChatRoomId` 추가. 메시지 내역을 커서 방식으로 변경. v0.3의 CORS·서버 주소·입력값 검증 규칙 반영. JWT 1시간·비밀번호 8~72자 등 v1.1 업무 규칙 유지. 미결정 항목(18장)과 구현 수정 사항(19장) 추가. DB 구조 변경 없음 |
 | 2026-10-14 | v1.2 | 구현 상태 갱신: I1(CORS `PUT` 허용)·I2(비밀번호 8~72자·UTF-8 72바이트 검증) 수정 완료 반영. 명세 내용 변경 없음 |
 | 2026-10-14 | v1.2 | 구현 상태 갱신: I3(JWT 기본 만료 `1h`) 기본값 수정 완료 반영. 응답 `expiresIn`은 I4에서 처리. 명세 내용 변경 없음 |
+| 2026-10-14 | v1.2 | 결정 24·25 초안 반영 (`docs/API_DRAFT.md` 18.3): 지역이 NULL인 회원의 로그인 응답 `region: null` 예외 처리(결정 24), `expiresIn` = 발급 토큰의 `exp − iat`(결정 25), `RegionName.sigungu` null 명시, 미결정 U12 추가. 회원가입 `regionId` 필수와 400 `VALIDATION_ERROR`는 변경 없음 |
