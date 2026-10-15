@@ -5,19 +5,25 @@ interface CreateUserInput {
   email: string;
   passwordHash: string;
   nickname: string;
+  regionId: string;
 }
 
 // 로그인과 이메일 중복 확인에 사용할 회원을 조회한다.
+// 지역이 없는 회원도 조회되도록 regions는 LEFT JOIN한다 (결정 24).
 export const findUserByEmail = async (email: string): Promise<DatabaseRow | null> => {
   const result = await pool.query(
     `SELECT
-       id,
-       email,
-       password_hash AS "passwordHash",
-       nickname,
-       region_id AS "regionId"
-     FROM public.users
-     WHERE email = $1`,
+       u.id,
+       u.email,
+       u.password_hash AS "passwordHash",
+       u.nickname,
+       u.region_id AS "regionId",
+       r.sido AS "regionSido",
+       r.sigungu AS "regionSigungu",
+       r.eupmyeondong AS "regionEupmyeondong"
+     FROM public.users u
+     LEFT JOIN public.regions r ON r.id = u.region_id
+     WHERE u.email = $1`,
     [email],
   );
 
@@ -34,17 +40,18 @@ export const findUserByNickname = async (nickname: string): Promise<DatabaseRow 
   return result.rows[0] ?? null;
 };
 
-// 해시된 비밀번호와 회원 기본 정보를 users 테이블에 저장한다.
+// 해시된 비밀번호, 회원 기본 정보, 가입 지역을 users 테이블에 저장한다.
 export const createUser = async ({
   email,
   passwordHash,
   nickname,
+  regionId,
 }: CreateUserInput): Promise<DatabaseRow> => {
   const result = await pool.query(
-    `INSERT INTO public.users (email, password_hash, nickname)
-     VALUES ($1, $2, $3)
+    `INSERT INTO public.users (email, password_hash, nickname, region_id)
+     VALUES ($1, $2, $3, $4)
      RETURNING id, email, nickname, region_id AS "regionId"`,
-    [email, passwordHash, nickname],
+    [email, passwordHash, nickname, regionId],
   );
 
   return result.rows[0];

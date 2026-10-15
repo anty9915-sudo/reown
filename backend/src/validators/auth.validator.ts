@@ -1,5 +1,6 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NICKNAME_PATTERN = /^[가-힣a-zA-Z0-9]{2,20}$/;
+const ID_PATTERN = /^[1-9]\d*$/;
 
 type ValidationDetails = Record<string, string>;
 type InputRecord = Record<string, unknown>;
@@ -59,9 +60,10 @@ const validatePassword = (
   }
 };
 
-// 회원가입 요청에 필요한 이메일, 비밀번호, 닉네임을 검사한다.
+// 회원가입 요청에 필요한 이메일, 비밀번호, 닉네임, 지역 ID를 검사한다.
+// 지역이 실제로 있는지는 auth service가 DB에서 확인한다 (결정 18).
 export const validateSignup = (body: unknown): ValidationDetails => {
-  const details = validateBody(body, ['email', 'password', 'nickname']);
+  const details = validateBody(body, ['email', 'password', 'nickname', 'regionId']);
   const input = isRecord(body) ? body : {};
 
   validateEmail(input.email, details);
@@ -71,6 +73,10 @@ export const validateSignup = (body: unknown): ValidationDetails => {
     details.nickname = '닉네임은 문자열이어야 합니다.';
   } else if (!NICKNAME_PATTERN.test(input.nickname)) {
     details.nickname = '닉네임은 한글, 영문, 숫자로 2자 이상 20자 이하여야 합니다.';
+  }
+
+  if (typeof input.regionId !== 'string' || !ID_PATTERN.test(input.regionId)) {
+    details.regionId = '지역 ID는 1 이상의 정수 문자열이어야 합니다.';
   }
 
   return details;
