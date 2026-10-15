@@ -9,6 +9,7 @@ import SignupPage from './loginnew'
 import SafeDealPage from './safedeal'
 import LocationPage from './location'
 import SellPage from './sell'
+import ProductDetailPage from './ProductDetailPage'
 
 const rootElement = document.getElementById('root')
 
@@ -27,6 +28,7 @@ createRoot(rootElement).render(
         <Route path="/safedeal" element={<SafeDealPage />} />
         <Route path="/location" element={<LocationPage />} />
         <Route path="/sell" element={<SellPage />} />
+        <Route path="/products/:productId" element={<ProductDetailPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

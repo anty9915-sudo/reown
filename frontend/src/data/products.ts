@@ -12,7 +12,7 @@ export type Product = {
 
 export const products: Product[] = [
   {
-    id: 1,
+    id: 8,
     title: "에어팟 프로 2세대 거의 새것",
     category: "디지털기기",
     price: 185000,
@@ -23,7 +23,7 @@ export const products: Product[] = [
     badge: "끌올",
   },
   {
-    id: 2,
+    id: 7,
     title: "이케아 원목 협탁 나눔급 가격",
     category: "가구·인테리어",
     price: 25000,
@@ -33,7 +33,7 @@ export const products: Product[] = [
     likes: 12,
   },
   {
-    id: 3,
+    id: 6,
     title: "나이키 덩크 로우 270 정품",
     category: "패션의류",
     price: 79000,
@@ -44,7 +44,7 @@ export const products: Product[] = [
     badge: "인기",
   },
   {
-    id: 4,
+    id: 5,
     title: "소니 WH-1000XM5 헤드폰",
     category: "디지털기기",
     price: 265000,
@@ -54,7 +54,7 @@ export const products: Product[] = [
     likes: 6,
   },
   {
-    id: 5,
+    id: 4,
     title: "빈티지 무드 테이블 조명",
     category: "가구·인테리어",
     price: 32000,
@@ -64,7 +64,7 @@ export const products: Product[] = [
     likes: 17,
   },
   {
-    id: 6,
+    id: 3,
     title: "다이슨 에어랩 컴플리트 롱",
     category: "생활가전",
     price: 390000,
@@ -75,7 +75,7 @@ export const products: Product[] = [
     badge: "가격제안",
   },
   {
-    id: 7,
+    id: 2,
     title: "필름 카메라 올림푸스 뮤",
     category: "취미·게임",
     price: 110000,
@@ -85,7 +85,7 @@ export const products: Product[] = [
     likes: 9,
   },
   {
-    id: 8,
+    id: 1,
     title: "가죽 숄더백 데일리로 좋아요",
     category: "패션의류",
     price: 45000,

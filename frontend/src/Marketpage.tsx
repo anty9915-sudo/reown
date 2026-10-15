@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
 import { categories } from './data/categories'
 import { products } from './data/products'
@@ -111,7 +112,13 @@ function MarketPage() {
                 return (
                   <article className="product-card" key={product.id}>
                     <div className="product-image">
-                      <img src={imageUrl(product.image)} alt={product.title} />
+                      <Link
+                        aria-label={`${product.title} 상세 보기`}
+                        className="product-image-link"
+                        to={`/products/${product.id}`}
+                      >
+                        <img src={imageUrl(product.image)} alt={product.title} />
+                      </Link>
                       {product.badge && (
                         <span className="product-badge">{product.badge}</span>
                       )}
@@ -130,7 +137,14 @@ function MarketPage() {
                     </div>
                     <div className="product-details">
                       <span className="product-category">{product.category}</span>
-                      <h3>{product.title}</h3>
+                      <h3>
+                        <Link
+                          className="product-title-link"
+                          to={`/products/${product.id}`}
+                        >
+                          {product.title}
+                        </Link>
+                      </h3>
                       <strong className="product-price">
                         {formatPrice(product.price)}
                       </strong>

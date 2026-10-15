@@ -271,12 +271,14 @@ function App() {
             <div className="product-grid">
               {visibleProducts.map((product) => (
                 <article className="product-card" key={product.id}>
-                  <a
-                    className="product-image"
-                    href="#market"
-                    aria-label={`${product.title} 상세 보기`}
-                  >
-                    <img src={imageUrl(product.image)} alt={product.title} />
+                  <div className="product-image">
+                    <Link
+                      aria-label={`${product.title} 상세 보기`}
+                      className="product-image-link"
+                      to={`/products/${product.id}`}
+                    >
+                      <img src={imageUrl(product.image)} alt={product.title} />
+                    </Link>
                     {product.badge && (
                       <span className="product-badge">{product.badge}</span>
                     )}
@@ -294,10 +296,17 @@ function App() {
                     >
                       {favorites.includes(product.id) ? "♥" : "♡"}
                     </button>
-                  </a>
+                  </div>
                   <div className="product-details">
                     <span className="product-category">{product.category}</span>
-                    <h3>{product.title}</h3>
+                    <h3>
+                      <Link
+                        className="product-title-link"
+                        to={`/products/${product.id}`}
+                      >
+                        {product.title}
+                      </Link>
+                    </h3>
                     <strong className="product-price">
                       {formatPrice(product.price)}
                     </strong>
