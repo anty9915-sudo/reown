@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import './RegionSelector.css'
 
-type Region = {
+export type Region = {
   id: string
   sido: string
   sigungu: string | null
@@ -19,9 +19,11 @@ type RegionsResponse = {
 
 type RegionSelectorProps = {
   selectedRegion: string
-  onSelect: (region: string) => void
+  // 두 번째 인자로 지역 객체(id 포함)를 넘긴다. 이름만 쓰는 기존 화면은 첫 번째 인자만 받으면 된다.
+  onSelect: (regionName: string, region: Region) => void
 }
 
+// 세종특별자치시처럼 sigungu가 null인 지역은 빈 값을 빼고 이름을 만든다.
 const getRegionName = (region: Region): string =>
   [region.sido, region.sigungu, region.eupmyeondong]
     .filter((part): part is string => Boolean(part))
@@ -76,7 +78,7 @@ function RegionSelector({ selectedRegion, onSelect }: RegionSelectorProps) {
   }, [isOpen, keyword])
 
   const selectRegion = (region: Region) => {
-    onSelect(getRegionName(region))
+    onSelect(getRegionName(region), region)
     setKeyword('')
     setIsOpen(false)
   }
