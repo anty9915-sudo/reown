@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import RegionSelector, { type Region } from './components/RegionSelector'
 import './Login.css'
 
 type SignupResponse = {
   data?: {
     user?: {
       nickname?: string
+      region?: Region | null
     }
   }
   error?: {
@@ -14,7 +16,18 @@ type SignupResponse = {
   }
 }
 
+// 백엔드가 400 응답의 error.details로 돌려주는 회원가입 입력 필드 (docs/API.md 회원가입)
+type SignupField = 'email' | 'nickname' | 'password' | 'regionId'
+type FieldErrors = Partial<Record<SignupField, string>>
+const signupFields: SignupField[] = ['email', 'nickname', 'password', 'regionId']
+
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') ?? ''
+
+// 세종특별자치시처럼 sigungu가 null인 지역도 빈 값 없이 표시한다.
+const formatRegion = (region: Region): string =>
+  [region.sido, region.sigungu, region.eupmyeondong]
+    .filter((part): part is string => Boolean(part))
+    .join(' ')
 
 function SignupPage() {
   const [nickname, setNickname] = useState('')
@@ -25,11 +38,21 @@ function SignupPage() {
   const [agreed, setAgreed] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({})
+  const [regionId, setRegionId] = useState('')
+  const [regionName, setRegionName] = useState('')
   const [createdNickname, setCreatedNickname] = useState('')
+  const [createdRegionName, setCreatedRegionName] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     setErrorMessage('')
+    setFieldErrors({})
+
+    if (!regionId) {
+      setFieldErrors({ regionId: '동네를 선택해 주세요.' })
+      return
+    }
 
     if (password !== passwordConfirm) {
       setErrorMessage('비밀번호가 서로 일치하지 않습니다.')
@@ -46,20 +69,26 @@ function SignupPage() {
       const response = await fetch(`${apiBaseUrl}/api/v1/auth/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, nickname }),
+        // regionId는 지역 검색 결과의 id 문자열 그대로 보낸다 (숫자로 바꾸지 않는다).
+        body: JSON.stringify({ email, password, nickname, regionId }),
       })
       const result = (await response.json()) as SignupResponse
 
       if (!response.ok) {
+        const details = result.error?.details ?? {}
+        const nextFieldErrors: FieldErrors = {}
+        for (const field of signupFields) {
+          if (details[field]) nextFieldErrors[field] = details[field]
+        }
+        setFieldErrors(nextFieldErrors)
         setErrorMessage(
-          result.error?.details?.email ??
-            result.error?.details?.nickname ??
-            result.error?.message ??
-            '회원가입에 실패했습니다. 입력 정보를 확인해 주세요.',
+          result.error?.message ?? '회원가입에 실패했습니다. 입력 정보를 확인해 주세요.',
         )
         return
       }
 
+      const createdRegion = result.data?.user?.region
+      setCreatedRegionName(createdRegion ? formatRegion(createdRegion) : regionName)
       setCreatedNickname(result.data?.user?.nickname ?? nickname)
     } catch {
       setErrorMessage(
@@ -120,6 +149,7 @@ function SignupPage() {
             <div className="signup-success" role="status">
               <span className="signup-success-icon" aria-hidden="true">✓</span>
               <h3>{createdNickname}님, 환영합니다!</h3>
+              {createdRegionName && <p>내 동네: {createdRegionName}</p>}
               <p>회원가입이 완료되었어요.<br />로그인하고 reown을 시작해 보세요.</p>
               <Link className="login-submit" to="/login">로그인하러 가기</Link>
             </div>
@@ -138,6 +168,9 @@ function SignupPage() {
                 title="한글, 영문, 숫자로 2자 이상 20자 이하여야 합니다."
                 value={nickname}
               />
+              {fieldErrors.nickname && (
+                <p className="signup-field-error" role="alert">{fieldErrors.nickname}</p>
+              )}
 
               <label htmlFor="signup-email">이메일</label>
               <input
@@ -149,6 +182,32 @@ function SignupPage() {
                 type="email"
                 value={email}
               />
+              {fieldErrors.email && (
+                <p className="signup-field-error" role="alert">{fieldErrors.email}</p>
+              )}
+
+              <label id="signup-region-label">내 동네</label>
+              <div
+                aria-labelledby="signup-region-label"
+                className="signup-region-field"
+                role="group"
+              >
+                <RegionSelector
+                  onSelect={(name, region) => {
+                    setRegionName(name)
+                    setRegionId(region.id)
+                    setFieldErrors((prev) => {
+                      const next = { ...prev }
+                      delete next.regionId
+                      return next
+                    })
+                  }}
+                  selectedRegion={regionName || '동네를 검색해 선택해 주세요'}
+                />
+              </div>
+              {fieldErrors.regionId && (
+                <p className="signup-field-error" role="alert">{fieldErrors.regionId}</p>
+              )}
 
               <div className="password-label-row">
                 <label htmlFor="signup-password">비밀번호</label>
@@ -163,14 +222,17 @@ function SignupPage() {
               <input
                 autoComplete="new-password"
                 id="signup-password"
-                maxLength={20}
+                maxLength={72}
                 minLength={8}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="8~20자로 입력해 주세요"
+                placeholder="8~72자로 입력해 주세요"
                 required
                 type={showPassword ? 'text' : 'password'}
                 value={password}
               />
+              {fieldErrors.password && (
+                <p className="signup-field-error" role="alert">{fieldErrors.password}</p>
+              )}
 
               <label htmlFor="signup-password-confirm">비밀번호 확인</label>
               <input
