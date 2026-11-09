@@ -6,6 +6,7 @@ export type Region = {
   sido: string
   sigungu: string | null
   eupmyeondong: string | null
+  localOnly?: boolean
 }
 
 type RegionsResponse = {
@@ -30,6 +31,30 @@ const getRegionName = (region: Region): string =>
     .filter((part): part is string => Boolean(part))
     .join(' ')
 
+const fallbackRegions: Region[] = [
+  '역삼동',
+  '논현동',
+  '삼성동',
+  '대치동',
+  '청담동',
+  '도곡동',
+  '신사동',
+  '압구정동',
+].map((eupmyeondong) => ({
+  id: `local:${eupmyeondong}`,
+  sido: '서울특별시',
+  sigungu: '강남구',
+  eupmyeondong,
+  localOnly: true,
+}))
+
+const findFallbackRegions = (query: string): Region[] => {
+  const normalizedQuery = query.replace(/\s+/g, '').toLowerCase()
+  return fallbackRegions.filter((region) =>
+    getRegionName(region).replace(/\s+/g, '').toLowerCase().includes(normalizedQuery),
+  )
+}
+
 function RegionSelector({
   selectedRegion,
   onReset,
@@ -48,6 +73,7 @@ function RegionSelector({
     const controller = new AbortController()
     const timeoutId = window.setTimeout(async () => {
       setIsLoading(true)
+      setRegions([])
       setError('')
 
       try {
@@ -61,15 +87,15 @@ function RegionSelector({
           throw new Error(result.error?.message ?? '지역을 검색하지 못했습니다.')
         }
 
-        setRegions(result.data?.items ?? [])
+        const apiRegions = result.data?.items ?? []
+        setRegions(apiRegions.length > 0 ? apiRegions : findFallbackRegions(query))
       } catch (requestError) {
         if (requestError instanceof Error && requestError.name === 'AbortError') {
           return
         }
+        setRegions(findFallbackRegions(query))
         setError(
-          requestError instanceof Error
-            ? requestError.message
-            : '지역 검색 중 오류가 발생했습니다.',
+          '지역 서버에 연결할 수 없어 예시 동네를 표시합니다. 예시 동네는 가입 정보에 저장되지 않습니다.',
         )
       } finally {
         if (!controller.signal.aborted) setIsLoading(false)
@@ -135,7 +161,12 @@ function RegionSelector({
           <input
             autoFocus
             id="region-search"
-            onChange={(event) => setKeyword(event.target.value)}
+            onChange={(event) => {
+              setKeyword(event.target.value)
+              setRegions([])
+              setError('')
+              setIsLoading(false)
+            }}
             placeholder="예: 역삼동, 강남구"
             value={keyword}
           />
@@ -147,21 +178,28 @@ function RegionSelector({
             {!isLoading && error && <p className="region-error">{error}</p>}
             {!isLoading &&
               !error &&
+              regions.some((region) => region.localOnly) && (
+                <p className="region-hint">
+                  DB 지역 데이터가 없어 예시 동네를 표시합니다. 예시 동네는 가입 정보에 저장되지 않습니다.
+                </p>
+              )}
+            {!isLoading &&
+              !error &&
               keyword.trim() &&
               regions.length === 0 && (
                 <p className="region-hint">검색된 지역이 없습니다.</p>
               )}
-            {keyword.trim() &&
+            {!isLoading && keyword.trim() &&
               regions.map((region) => (
-              <button
-                className="region-result"
-                key={region.id}
-                onClick={() => selectRegion(region)}
-                type="button"
-              >
-                <span className="region-result-icon" aria-hidden="true">⌖</span>
-                <span>{getRegionName(region)}</span>
-              </button>
+                <button
+                  className="region-result"
+                  key={region.id}
+                  onClick={() => selectRegion(region)}
+                  type="button"
+                >
+                  <span className="region-result-icon" aria-hidden="true">⌖</span>
+                  <span>{getRegionName(region)}</span>
+                </button>
               ))}
           </div>
         </div>

@@ -73,10 +73,11 @@ export const validateSignup = (body: unknown): ValidationDetails => {
   }
 
   if (
-    typeof input.regionId !== 'string' ||
-    !/^\d{1,19}$/.test(input.regionId) ||
-    BigInt(input.regionId) < 1n ||
-    BigInt(input.regionId) > 9223372036854775807n
+    input.regionId !== undefined &&
+    (typeof input.regionId !== 'string' ||
+      !/^\d{1,19}$/.test(input.regionId) ||
+      BigInt(input.regionId) < 1n ||
+      BigInt(input.regionId) > 9223372036854775807n)
   ) {
     details.regionId = '동네 검색 결과에서 지역을 선택해 주세요.';
   }

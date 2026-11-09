@@ -431,7 +431,14 @@
 }
 
 .signup-region-field {
-  margin-bottom: 19px;
+  margin-bottom: 7px;
+}
+
+.signup-region-hint {
+  margin: 0 0 15px;
+  color: #858e84;
+  font-size: 10px;
+  line-height: 1.6;
 }
 
 .signup-field-error {

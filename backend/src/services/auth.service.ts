@@ -60,7 +60,7 @@ export const signup = async ({
       email: normalizedEmail,
       passwordHash,
       nickname,
-      regionId,
+      regionId: regionId ?? null,
     });
   } catch (error) {
     if (

@@ -5,7 +5,7 @@ interface CreateUserInput {
   email: string;
   passwordHash: string;
   nickname: string;
-  regionId: string;
+  regionId: string | null;
 }
 
 // 로그인과 이메일 중복 확인에 사용할 회원을 조회한다.

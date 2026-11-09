@@ -104,7 +104,7 @@ FRONTEND_URL=http://localhost:5173
 | `POST` | `/api/v1/auth/signup` | 불필요 |
 | `POST` | `/api/v1/auth/login` | 불필요 |
 
-회원가입 요청은 동네 검색 API에서 받은 지역 ID 문자열을 사용한다.
+회원가입 요청의 `regionId`는 선택 항목이다. DB에 지역 데이터가 준비된 경우 동네 검색 API에서 받은 지역 ID 문자열을 전달한다. 생략하면 동네 미설정 상태로 가입한다.
 
 ```json
 {

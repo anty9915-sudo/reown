@@ -41,11 +41,6 @@ function SignupPage() {
     setErrorMessage("");
     setFieldErrors({});
 
-    if (!regionId) {
-      setFieldErrors({ regionId: "동네를 선택해 주세요." });
-      return;
-    }
-
     if (password !== passwordConfirm) {
       setErrorMessage("비밀번호가 서로 일치하지 않습니다.");
       return;
@@ -62,7 +57,12 @@ function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // regionId는 지역 검색 결과의 id 문자열 그대로 보낸다 (숫자로 바꾸지 않는다).
-        body: JSON.stringify({ email, password, nickname, regionId }),
+        body: JSON.stringify({
+          email,
+          password,
+          nickname,
+          ...(regionId ? { regionId } : {}),
+        }),
       });
       const result = (await response.json()) as SignupResponse;
 
@@ -191,7 +191,7 @@ function SignupPage() {
                 <RegionSelector
                   onSelect={(name, region) => {
                     setRegionName(name);
-                    setRegionId(region.id);
+                    setRegionId(region.localOnly ? "" : region.id);
                     setFieldErrors((prev) => {
                       const next = { ...prev };
                       delete next.regionId;
@@ -201,6 +201,16 @@ function SignupPage() {
                   selectedRegion={regionName || "동네를 검색해 선택해 주세요"}
                 />
               </div>
+              {regionName && !regionId && (
+                <p className="signup-region-hint">
+                  예시 동네로 표시 중이며 계정에는 저장되지 않아요.
+                </p>
+              )}
+              {!regionName && (
+                <p className="signup-region-hint">
+                  동네 데이터가 준비되지 않은 경우 선택 없이 가입할 수 있어요.
+                </p>
+              )}
               {fieldErrors.regionId && (
                 <p className="signup-field-error" role="alert">
                   {fieldErrors.regionId}
