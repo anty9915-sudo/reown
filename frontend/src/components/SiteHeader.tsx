@@ -38,6 +38,22 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
           >
             안전거래
           </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `nav-link${isActive ? ' active' : ''}`
+            }
+            to="/notice"
+          >
+            공지사항
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `nav-link${isActive ? ' active' : ''}`
+            }
+            to="/review"
+          >
+            후기
+          </NavLink>
         </nav>
         <div className="header-actions">
           <label className="search-box">

@@ -75,11 +75,11 @@ Authorization: Bearer <access-token>
 
 ### 2.2 프론트엔드 토큰 보관 위치
 
-- 프론트엔드는 Access Token을 브라우저의 `sessionStorage`에 저장한다.
-- 저장할 때 사용하는 키 이름은 `accessToken`으로 통일한다.
+- 로그인 화면은 Access Token을 `reown-access-token` 키로 저장한다.
+- 로그인 상태 유지 선택 시 `localStorage`, 선택하지 않으면 `sessionStorage`에 저장한다.
 - API 요청 시 저장된 토큰을 읽어 `Authorization` 헤더에 넣는다.
 - 로그아웃하거나 `401 Unauthorized` 응답을 받으면 저장된 토큰을 삭제한다.
-- 브라우저 탭을 닫으면 토큰이 삭제되며, 다시 로그인해야 한다.
+- `sessionStorage`에 저장한 토큰은 브라우저 탭을 닫으면 삭제된다.
 - 토큰을 URL이나 콘솔 로그에 출력하지 않는다.
 
 ### 2.3 CORS 허용 주소
@@ -96,6 +96,35 @@ CORS는 등록된 프론트엔드 주소에서만 백엔드 API를 호출할 수
 ```env
 FRONTEND_URL=http://localhost:5173
 ```
+
+### 2.4 회원가입과 로그인
+
+| 메서드 | 경로 | 인증 |
+| ------ | ---- | ---- |
+| `POST` | `/api/v1/auth/signup` | 불필요 |
+| `POST` | `/api/v1/auth/login` | 불필요 |
+
+회원가입 요청은 동네 검색 API에서 받은 지역 ID 문자열을 사용한다.
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "nickname": "동네주민",
+  "regionId": "15"
+}
+```
+
+로그인 요청은 이메일과 비밀번호를 전달한다.
+
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+회원가입은 `201 Created`, 로그인은 `200 OK`와 함께 `data.accessToken` 및 공개 사용자 정보를 반환한다. 비밀번호 해시는 응답에 포함하지 않는다. 로그인 실패 시 `401 Unauthorized`를 반환한다.
 
 ---
 

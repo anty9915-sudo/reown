@@ -10,6 +10,8 @@ import SafeDealPage from './safedeal'
 import LocationPage from './location'
 import SellPage from './sell'
 import ProductDetailPage from './ProductDetailPage'
+import NoticePage from './notice'
+import ReviewPage from './review'
 
 const rootElement = document.getElementById('root')
 
@@ -28,6 +30,8 @@ createRoot(rootElement).render(
         <Route path="/safedeal" element={<SafeDealPage />} />
         <Route path="/location" element={<LocationPage />} />
         <Route path="/sell" element={<SellPage />} />
+        <Route path="/notice" element={<NoticePage />} />
+        <Route path="/review" element={<ReviewPage />} />
         <Route path="/products/:productId" element={<ProductDetailPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

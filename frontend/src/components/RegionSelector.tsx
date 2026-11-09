@@ -19,6 +19,7 @@ type RegionsResponse = {
 
 type RegionSelectorProps = {
   selectedRegion: string
+  onReset?: () => void
   // 두 번째 인자로 지역 객체(id 포함)를 넘긴다. 이름만 쓰는 기존 화면은 첫 번째 인자만 받으면 된다.
   onSelect: (regionName: string, region: Region) => void
 }
@@ -29,7 +30,11 @@ const getRegionName = (region: Region): string =>
     .filter((part): part is string => Boolean(part))
     .join(' ')
 
-function RegionSelector({ selectedRegion, onSelect }: RegionSelectorProps) {
+function RegionSelector({
+  selectedRegion,
+  onReset,
+  onSelect,
+}: RegionSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
   const [regions, setRegions] = useState<Region[]>([])
@@ -103,7 +108,7 @@ function RegionSelector({ selectedRegion, onSelect }: RegionSelectorProps) {
         type="button"
       >
         <span aria-hidden="true">⌖</span>
-        {selectedRegion}
+        <span className="location-filter-name">{selectedRegion}</span>
         <span className="filter-chevron">⌄</span>
       </button>
 
@@ -112,6 +117,21 @@ function RegionSelector({ selectedRegion, onSelect }: RegionSelectorProps) {
           <label className="region-search-label" htmlFor="region-search">
             동네 이름으로 검색
           </label>
+          {onReset && (
+            <button
+              className="region-reset"
+              onClick={() => {
+                onReset()
+                setKeyword('')
+                setRegions([])
+                setError('')
+                setIsOpen(false)
+              }}
+              type="button"
+            >
+              전체 지역 보기
+            </button>
+          )}
           <input
             autoFocus
             id="region-search"

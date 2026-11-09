@@ -55,7 +55,12 @@ const validatePassword = (
 
 // 회원가입 요청에 필요한 이메일, 비밀번호, 닉네임을 검사한다.
 export const validateSignup = (body: unknown): ValidationDetails => {
-  const details = validateBody(body, ['email', 'password', 'nickname']);
+  const details = validateBody(body, [
+    'email',
+    'password',
+    'nickname',
+    'regionId',
+  ]);
   const input = isRecord(body) ? body : {};
 
   validateEmail(input.email, details);
@@ -65,6 +70,15 @@ export const validateSignup = (body: unknown): ValidationDetails => {
     details.nickname = '닉네임은 문자열이어야 합니다.';
   } else if (!NICKNAME_PATTERN.test(input.nickname)) {
     details.nickname = '닉네임은 한글, 영문, 숫자로 2자 이상 20자 이하여야 합니다.';
+  }
+
+  if (
+    typeof input.regionId !== 'string' ||
+    !/^\d{1,19}$/.test(input.regionId) ||
+    BigInt(input.regionId) < 1n ||
+    BigInt(input.regionId) > 9223372036854775807n
+  ) {
+    details.regionId = '동네 검색 결과에서 지역을 선택해 주세요.';
   }
 
   return details;

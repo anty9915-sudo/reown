@@ -4,6 +4,7 @@ import "./App.css";
 import { products } from "./data/products";
 import { imageUrl } from "./utils/imageUrl";
 import SiteHeader from "./components/SiteHeader";
+import RegionSelector from "./components/RegionSelector";
 import { formatPrice } from "./utils/formatprice";
 
 const allRegionsLabel = "전체지역";
@@ -14,15 +15,10 @@ function App() {
   const [favorites, setFavorites] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState("추천");
   const [selectedRegion, setSelectedRegion] = useState(allRegionsLabel);
-  const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false);
 
-  const regions = useMemo(
-    () => [...new Set(products.map((product) => product.location))],
-    [],
-  );
   const featuredProduct = useMemo(
     () =>
-      products.find((product) => product.location === selectedRegion) ??
+      products.find((product) => selectedRegion.endsWith(product.location)) ??
       products[0],
     [selectedRegion],
   );
@@ -34,7 +30,7 @@ function App() {
         selectedCategory === "전체" || product.category === selectedCategory;
       const matchesRegion =
         selectedRegion === allRegionsLabel ||
-        product.location === selectedRegion;
+        selectedRegion.endsWith(product.location);
       const matchesSearch =
         !keyword ||
         `${product.title} ${product.category} ${product.location}`
@@ -44,9 +40,7 @@ function App() {
     });
 
     if (activeTab === "인기순") {
-      return filtered
-        .slice()
-        .sort((a, b) => b.likes - a.likes);
+      return filtered.slice().sort((a, b) => b.likes - a.likes);
     }
     return filtered;
   }, [activeTab, search, selectedCategory, selectedRegion]);
@@ -121,58 +115,19 @@ function App() {
             <div aria-hidden="true" className="floating-tag tag-right">
               <span>↗</span> 동네 직거래
             </div>
-            <div aria-hidden="true" className="hero-sparkle sparkle-one">✳</div>
-            <div aria-hidden="true" className="hero-sparkle sparkle-two">✦</div>
+            <div aria-hidden="true" className="hero-sparkle sparkle-one">
+              ✳
+            </div>
+            <div aria-hidden="true" className="hero-sparkle sparkle-two">
+              ✦
+            </div>
           </div>
           <div className="hero-location-selector">
-            <button
-              aria-expanded={isRegionSelectorOpen}
-              aria-haspopup="dialog"
-              className="hero-location"
-              onClick={() => setIsRegionSelectorOpen((isOpen) => !isOpen)}
-              type="button"
-            >
-              <span aria-hidden="true">⌖</span>
-              <span className="hero-location-name">{selectedRegion}</span>
-              <span aria-hidden="true" className="location-chevron">⌄</span>
-            </button>
-            {isRegionSelectorOpen && (
-              <div
-                aria-label="지역 선택"
-                className="home-region-popover hero-region-popover"
-                role="dialog"
-              >
-                <span className="home-region-label">전체 지역</span>
-                <button
-                  aria-pressed={selectedRegion === allRegionsLabel}
-                  className={`home-region-option${selectedRegion === allRegionsLabel ? " selected" : ""}`}
-                  onClick={() => {
-                    setSelectedRegion(allRegionsLabel);
-                    setIsRegionSelectorOpen(false);
-                  }}
-                  type="button"
-                >
-                  전체지역
-                </button>
-                <span className="home-region-label">지역 카테고리</span>
-                <div className="home-region-options">
-                  {regions.map((region) => (
-                    <button
-                      aria-pressed={selectedRegion === region}
-                      className={`home-region-option${selectedRegion === region ? " selected" : ""}`}
-                      key={region}
-                      onClick={() => {
-                        setSelectedRegion(region);
-                        setIsRegionSelectorOpen(false);
-                      }}
-                      type="button"
-                    >
-                      {region}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            <RegionSelector
+              onReset={() => setSelectedRegion(allRegionsLabel)}
+              onSelect={(regionName) => setSelectedRegion(regionName)}
+              selectedRegion={selectedRegion}
+            />
           </div>
         </section>
 

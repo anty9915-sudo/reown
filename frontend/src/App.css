@@ -750,6 +750,21 @@ main {
   right: 25px;
 }
 
+.hero-location-selector .location-filter {
+  max-width: min(290px, 55vw);
+  min-height: 34px;
+  height: auto;
+  padding: 7px 10px;
+  border-color: rgba(225, 230, 221, 0.9);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 10px;
+}
+
+.hero-location-selector .region-popover {
+  width: 260px;
+}
+
 .hero-location {
   display: flex;
   align-items: center;

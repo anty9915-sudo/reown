@@ -32,7 +32,12 @@ const conflictError = (field: string, message: string): AppError =>
   new AppError(409, 'RESOURCE_CONFLICT', message, { [field]: message });
 
 // 중복을 확인하고 비밀번호를 해시한 뒤 새 회원과 Access Token을 만든다.
-export const signup = async ({ email, password, nickname }: SignupInput) => {
+export const signup = async ({
+  email,
+  password,
+  nickname,
+  regionId,
+}: SignupInput) => {
   const normalizedEmail = email.trim().toLowerCase();
   const [emailUser, nicknameUser] = await Promise.all([
     findUserByEmail(normalizedEmail),
@@ -55,6 +60,7 @@ export const signup = async ({ email, password, nickname }: SignupInput) => {
       email: normalizedEmail,
       passwordHash,
       nickname,
+      regionId,
     });
   } catch (error) {
     if (
@@ -71,6 +77,19 @@ export const signup = async ({ email, password, nickname }: SignupInput) => {
       error.constraint === 'uq_users_nickname'
     ) {
       throw conflictError('nickname', '이미 사용 중인 닉네임입니다.');
+    }
+
+    if (
+      isPostgresError(error) &&
+      error.code === '23503' &&
+      error.constraint === 'fk_users_region'
+    ) {
+      throw new AppError(
+        400,
+        'INVALID_REGION',
+        '선택한 동네를 찾을 수 없습니다. 다시 검색해 주세요.',
+        { regionId: '동네 검색 결과에서 지역을 선택해 주세요.' },
+      );
     }
 
     throw error;

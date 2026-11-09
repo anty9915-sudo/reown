@@ -7,7 +7,8 @@
   max-width: min(290px, 55vw);
 }
 
-.region-selector .location-filter > span:nth-child(2) {
+.region-selector .location-filter-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -32,6 +33,26 @@
   color: #4e5b4c;
   font-size: 10px;
   font-weight: 700;
+}
+
+.region-reset {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px 7px;
+  border: 1px solid #e9ece7;
+  border-radius: 5px;
+  color: #536e53;
+  background: #f8faf7;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.region-reset:hover {
+  border-color: #b6ccb6;
+  background: #f3f7f1;
 }
 
 .region-popover > input {
