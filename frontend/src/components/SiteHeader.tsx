@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom'
+import { Link, NavLink } from "react-router-dom"
 
 type SiteHeaderProps = {
   search: string
@@ -15,41 +15,31 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
         </Link>
         <nav className="main-nav" aria-label="주요 메뉴">
           <NavLink
-            className={({ isActive }) =>
-              `nav-link${isActive ? ' active' : ''}`
-            }
+            className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
             to="/market"
           >
             중고거래
           </NavLink>
           <NavLink
-            className={({ isActive }) =>
-              `nav-link${isActive ? ' active' : ''}`
-            }
+            className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
             to="/location"
           >
             동네생활
           </NavLink>
           <NavLink
-            className={({ isActive }) =>
-              `nav-link${isActive ? ' active' : ''}`
-            }
+            className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
             to="/safedeal"
           >
             안전거래
           </NavLink>
           <NavLink
-            className={({ isActive }) =>
-              `nav-link${isActive ? ' active' : ''}`
-            }
+            className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
             to="/notice"
           >
             공지사항
           </NavLink>
           <NavLink
-            className={({ isActive }) =>
-              `nav-link${isActive ? ' active' : ''}`
-            }
+            className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
             to="/review"
           >
             후기

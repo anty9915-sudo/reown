@@ -7,6 +7,8 @@ export type Product = {
   time: string;
   image: string;
   likes: number;
+  sellerId?: number;
+  deletedAt?: string | null;
   badge?: string;
 };
 

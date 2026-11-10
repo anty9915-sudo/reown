@@ -1010,6 +1010,36 @@ main {
   letter-spacing: -0.25px;
 }
 
+.product-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cart-button {
+  flex-shrink: 0;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #485248;
+  background: #f5f6f4;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.cart-button:hover {
+  background: #e9eee8;
+}
+
+.cart-button.is-in-cart {
+  color: #166534;
+  background: #dcfce7;
+}
+
 .product-meta {
   display: flex;
   align-items: center;
