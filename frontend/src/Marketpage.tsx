@@ -7,6 +7,7 @@ import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
 import RegionSelector from './components/RegionSelector'
 import { getSelectedRegion, saveSelectedRegion } from './utils/selectedRegion'
+import { useCart } from './hooks/cartContext'
 import './App.css'
 
 function MarketPage() {
@@ -15,6 +16,7 @@ function MarketPage() {
   const [activeTab, setActiveTab] = useState('추천')
   const [favorites, setFavorites] = useState<number[]>([])
   const [selectedRegion, setSelectedRegion] = useState(getSelectedRegion)
+  const { cart, toggleCart } = useCart()
 
   const visibleProducts = useMemo(() => {
     const keyword = search.trim().toLowerCase()
@@ -145,9 +147,26 @@ function MarketPage() {
                           {product.title}
                         </Link>
                       </h3>
-                      <strong className="product-price">
-                        {formatPrice(product.price)}
-                      </strong>
+                      <div className="product-price-row">
+                        <strong className="product-price">
+                          {formatPrice(product.price)}
+                        </strong>
+                        <button
+                          aria-label={
+                            cart.some((item) => item.productId === String(product.id))
+                              ? `${product.title} 장바구니에서 빼기`
+                              : `${product.title} 장바구니에 담기`
+                          }
+                          aria-pressed={cart.some((item) => item.productId === String(product.id))}
+                          className={`cart-button${cart.some((item) => item.productId === String(product.id)) ? ' is-in-cart' : ''}`}
+                          onClick={() =>
+                            toggleCart(product)
+                          }
+                          type="button"
+                        >
+                          {cart.some((item) => item.productId === String(product.id)) ? '✓ 담김' : '+ 장바구니'}
+                        </button>
+                      </div>
                       <div className="product-meta">
                         <span>
                           {product.location} · {product.time}

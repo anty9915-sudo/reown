@@ -1,0 +1,241 @@
+.chat-main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+.chat-back {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: #4a5a4f;
+  text-decoration: none;
+}
+
+.chat-state {
+  padding: 80px 0;
+  text-align: center;
+  color: #7a857d;
+}
+
+.chat-room {
+  display: flex;
+  flex-direction: column;
+  height: 72vh;
+  min-height: 520px;
+  border: 1px solid #e3e8e4;
+  border-radius: 16px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid #e3e8e4;
+}
+.chat-partner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chat-offline {
+  font-size: 12px;
+  color: #c98a1b;
+}
+
+/* 상품 영역 */
+.chat-product {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #f7f9f6;
+  border-bottom: 1px solid #e3e8e4;
+}
+.chat-product-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+.chat-product-link img {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+.chat-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  font-size: 13px;
+}
+.chat-product-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-status {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+.chat-status-on_sale {
+  background: #2f5d3f;
+}
+.chat-status-reserved {
+  background: #c98a1b;
+}
+.chat-status-sold {
+  background: #8a8f8b;
+}
+
+.chat-offer-btn {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border: 1px solid #2f5d3f;
+  border-radius: 8px;
+  background: #fff;
+  color: #2f5d3f;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chat-offer-btn:disabled {
+  border-color: #cfd6d1;
+  color: #aab2ac;
+  cursor: not-allowed;
+}
+
+.chat-notice {
+  margin: 0;
+  padding: 10px 18px;
+  background: #fbf3e2;
+  font-size: 13px;
+  color: #7a5a14;
+}
+
+/* 메시지 목록 */
+.chat-messages {
+  flex: 1;
+  margin: 0;
+  padding: 16px 18px;
+  list-style: none;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-empty {
+  margin: auto;
+  font-size: 14px;
+  color: #9aa39d;
+}
+
+.chat-date {
+  margin: 8px 0 12px;
+  text-align: center;
+  font-size: 12px;
+  color: #9aa39d;
+}
+
+.chat-message {
+  display: flex;
+  flex-direction: column;
+  max-width: 75%;
+}
+.chat-message.mine {
+  margin-left: auto;
+  align-items: flex-end;
+}
+.chat-message.theirs {
+  margin-right: auto;
+  align-items: flex-start;
+}
+
+.chat-bubble {
+  padding: 9px 13px;
+  border-radius: 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.mine .chat-bubble {
+  background: #2f5d3f;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.theirs .chat-bubble {
+  background: #eef1ee;
+  color: #1f2a23;
+  border-bottom-left-radius: 4px;
+}
+
+.chat-meta {
+  display: flex;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 11px;
+  color: #9aa39d;
+}
+
+.chat-error {
+  margin: 0;
+  padding: 8px 18px;
+  font-size: 13px;
+  color: #c0392b;
+}
+
+/* 입력 */
+.chat-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 14px;
+  border-top: 1px solid #e3e8e4;
+}
+.chat-form textarea {
+  flex: 1;
+  max-height: 120px;
+  padding: 10px 12px;
+  border: 1px solid #d5dcd7;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  resize: none;
+}
+.chat-form textarea:disabled {
+  background: #f4f6f2;
+}
+.chat-count {
+  padding-bottom: 10px;
+  font-size: 12px;
+  color: #9aa39d;
+}
+.chat-count.over {
+  color: #c0392b;
+}
+.chat-form button {
+  padding: 10px 18px;
+  border: 0;
+  border-radius: 10px;
+  background: #2f5d3f;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chat-form button:disabled {
+  background: #9db3a4;
+  cursor: not-allowed;
+}

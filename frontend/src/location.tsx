@@ -5,12 +5,14 @@ import { categories } from './data/categories'
 import { products } from './data/products'
 import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
+import { useCart } from './hooks/cartContext'
 import './App.css'
 
 function LocationPage() {
   const [search, setSearch] = useState('')
   const [selectedRegion, setSelectedRegion] = useState('전체 지역')
   const [selectedCategory, setSelectedCategory] = useState('전체')
+  const { cart, toggleCart } = useCart()
 
   const regions = useMemo(
     () => [...new Set(products.map((product) => product.location))],
@@ -112,9 +114,24 @@ function LocationPage() {
                         {product.title}
                       </Link>
                     </h3>
-                    <strong className="product-price">
-                      {formatPrice(product.price)}
-                    </strong>
+                    <div className="product-price-row">
+                      <strong className="product-price">
+                        {formatPrice(product.price)}
+                      </strong>
+                      <button
+                        aria-label={
+                          cart.some((item) => item.productId === String(product.id))
+                            ? `${product.title} 장바구니에서 빼기`
+                            : `${product.title} 장바구니에 담기`
+                        }
+                        aria-pressed={cart.some((item) => item.productId === String(product.id))}
+                        className={`cart-button${cart.some((item) => item.productId === String(product.id)) ? ' is-in-cart' : ''}`}
+                        onClick={() => toggleCart(product)}
+                        type="button"
+                      >
+                        {cart.some((item) => item.productId === String(product.id)) ? '✓ 담김' : '+ 장바구니'}
+                      </button>
+                    </div>
                     <div className="product-meta">
                       <span>{product.time}</span>
                       <span className="product-likes" aria-label={`관심 ${product.likes}개`}>

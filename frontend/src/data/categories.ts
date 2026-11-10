@@ -5,4 +5,4 @@ export const categories = [
   "패션의류",
   "생활가전",
   "취미·게임",
-];
+]

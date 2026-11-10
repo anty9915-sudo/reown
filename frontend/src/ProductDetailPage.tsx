@@ -1,15 +1,37 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import SiteHeader from './components/SiteHeader'
-import { products } from './data/products'
-import { formatPrice } from './utils/formatprice'
-import { imageUrl } from './utils/imageUrl'
-import './ProductDetail.css'
+import { useState } from "react"
+import { Link, useNavigate, useParams } from "react-router-dom"
+import SiteHeader from "./components/SiteHeader"
+import { ApiError, createChatRoom } from "./api/chats"
+import { products } from "./data/products"
+import { formatPrice } from "./utils/formatprice"
+import { imageUrl } from "./utils/imageUrl"
+import "./ProductDetail.css"
 
 function ProductDetailPage() {
   const { productId } = useParams()
-  const [search, setSearch] = useState('')
+  const navigate = useNavigate()
+  const [search, setSearch] = useState("")
+  const [starting, setStarting] = useState(false)
+  const [chatError, setChatError] = useState("")
   const product = products.find((item) => item.id === Number(productId))
+
+  const startChat = async () => {
+    if (!product || starting) return
+    setStarting(true)
+    setChatError("")
+    try {
+      const { roomId } = await createChatRoom(product.id)
+      navigate(`/chats/${roomId}`)
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        navigate("/login")
+        return
+      }
+      setChatError(e instanceof Error ? e.message : "채팅을 시작할 수 없어요.")
+    } finally {
+      setStarting(false)
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -62,10 +84,19 @@ function ProductDetailPage() {
                 </div>
               </div>
 
-              <button className="product-detail-contact" disabled type="button">
-                판매자에게 문의하기
+              <button
+                className="product-detail-contact"
+                onClick={startChat}
+                disabled={starting}
+                type="button"
+              >
+                {starting ? "채팅방 여는 중..." : "판매자에게 문의하기"}
               </button>
-              <p className="product-detail-note">채팅 문의 기능은 준비 중이에요.</p>
+              {chatError && (
+                <p className="product-detail-note" role="alert">
+                  {chatError}
+                </p>
+              )}
             </div>
           </article>
 
@@ -73,9 +104,13 @@ function ProductDetailPage() {
             <span aria-hidden="true">✓</span>
             <div>
               <strong>안전한 거래를 위해</strong>
-              <p>거래 전 상품 상태와 약속 내용을 판매자와 충분히 확인해 주세요.</p>
+              <p>
+                거래 전 상품 상태와 약속 내용을 판매자와 충분히 확인해 주세요.
+              </p>
             </div>
-            <Link to="/safedeal">안전거래 안내 <span aria-hidden="true">→</span></Link>
+            <Link to="/safedeal">
+              안전거래 안내 <span aria-hidden="true">→</span>
+            </Link>
           </section>
         </main>
       ) : (

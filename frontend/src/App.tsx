@@ -5,8 +5,7 @@ import { products } from "./data/products"
 import { imageUrl } from "./utils/imageUrl"
 import SiteHeader from "./components/SiteHeader"
 import { formatPrice } from "./utils/formatprice"
-import { useCart } from "./hooks/useCart"
-
+import { useCart } from "./hooks/cartContext"
 const allRegionsLabel = "전체지역"
 
 function App() {
@@ -311,22 +310,22 @@ function App() {
                       </strong>
                       <button
                         aria-label={
-                          cart.includes(product.id)
+                          cart.some((item) => item.productId === String(product.id))
                             ? `${product.title} 장바구니에서 빼기`
                             : `${product.title} 장바구니에 담기`
                         }
-                        aria-pressed={cart.includes(product.id)}
+                        aria-pressed={cart.some((item) => item.productId === String(product.id))}
                         className={`cart-button ${
-                          cart.includes(product.id) ? "is-in-cart" : ""
+                          cart.some((item) => item.productId === String(product.id)) ? "is-in-cart" : ""
                         }`}
                         onClick={(event) => {
                           event.preventDefault()
                           event.stopPropagation()
-                          toggleCart(product.id, product.sellerId)
+                          toggleCart(product)
                         }}
                         type="button"
                       >
-                        {cart.includes(product.id) ? "✓ 담김" : "+ 장바구니"}
+                        {cart.some((item) => item.productId === String(product.id)) ? "✓ 담김" : "+ 장바구니"}
                       </button>
                     </div>
                     <div className="product-meta">

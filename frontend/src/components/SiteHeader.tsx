@@ -44,6 +44,12 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
           >
             후기
           </NavLink>
+          <NavLink
+            className={({ isActive }) => `nav-link${isActive ? " active" : ""}`}
+            to="/orders"
+          >
+            주문내역
+          </NavLink>
         </nav>
         <div className="header-actions">
           <label className="search-box">

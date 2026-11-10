@@ -163,11 +163,20 @@
   border: 0;
   border-radius: 7px;
   color: #fff;
-  background: #9bb19a;
+  background: #3c7653;
   font: inherit;
   font-size: 12px;
   font-weight: 700;
-  cursor: not-allowed;
+  cursor: pointer;
+}
+
+.product-detail-contact:hover:not(:disabled) {
+  background: #28583d;
+}
+
+.product-detail-contact:disabled {
+  background: #9bb19a;
+  cursor: wait;
 }
 
 .product-detail-note {
