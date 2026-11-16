@@ -7,7 +7,8 @@ DBeaver 접속 방법은 [`docs/DB_CONNECTION.md`](../docs/DB_CONNECTION.md)를 
 ```text
 db/
 ├── migrations/                 # DB 구조 생성·변경 SQL
-│   └── 001_initial_schema.sql
+│   ├── 001_initial_schema.sql
+│   └── 002_add_user_region_name.sql
 ├── seeds/                      # 초기 데이터 SQL
 │   ├── 001_regions.sql         # 법정동 지역 (생성기로 만든다 — 아직 생성 전)
 │   ├── 002_categories.sql      # 상품 카테고리 16개
@@ -24,6 +25,7 @@ db/
 | 항목 | 상태 |
 |---|---|
 | `001_initial_schema.sql` | Supabase 적용 완료 (2026-10-04, SHA-256 `0c85efc4…`). 테이블 16개, RLS 16개 ON, 정책 0개 |
+| `002_add_user_region_name.sql` | 작성 완료, Supabase 미적용. `users.region_name` 자유 입력 동네명 컬럼 추가 |
 | `001_regions.sql` | 아직 없음. 법정동 원본 파일을 받은 뒤 생성기로 만든다 |
 | `002_categories.sql` | 작성 완료, Supabase 미적용 |
 
@@ -69,6 +71,7 @@ db/
 
 ```text
 migrations/001_initial_schema.sql
+  → migrations/002_add_user_region_name.sql
   → seeds/001_regions.sql
   → seeds/002_categories.sql
 ```

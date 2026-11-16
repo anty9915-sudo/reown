@@ -60,6 +60,7 @@ export const validateSignup = (body: unknown): ValidationDetails => {
     'password',
     'nickname',
     'regionId',
+    'regionName',
   ]);
   const input = isRecord(body) ? body : {};
 
@@ -80,6 +81,13 @@ export const validateSignup = (body: unknown): ValidationDetails => {
       BigInt(input.regionId) > 9223372036854775807n)
   ) {
     details.regionId = '동네 검색 결과에서 지역을 선택해 주세요.';
+  }
+
+  if (
+    input.regionName !== undefined &&
+    (typeof input.regionName !== 'string' || input.regionName.trim().length > 100)
+  ) {
+    details.regionName = '동네명은 100자 이하여야 합니다.';
   }
 
   return details;

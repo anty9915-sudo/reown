@@ -26,6 +26,7 @@ const toPublicUser = (user: DatabaseRow) => ({
   email: user.email,
   nickname: user.nickname,
   regionId: user.regionId === null ? null : String(user.regionId),
+  regionName: user.regionName ?? null,
 });
 
 const conflictError = (field: string, message: string): AppError =>
@@ -37,6 +38,7 @@ export const signup = async ({
   password,
   nickname,
   regionId,
+  regionName,
 }: SignupInput) => {
   const normalizedEmail = email.trim().toLowerCase();
   const [emailUser, nicknameUser] = await Promise.all([
@@ -61,6 +63,7 @@ export const signup = async ({
       passwordHash,
       nickname,
       regionId: regionId ?? null,
+      regionName: regionName?.trim() || null,
     });
   } catch (error) {
     if (

@@ -1,7 +1,7 @@
 # REOWN Database 설계
 
-> **상태: 설계 확정 v1.1 (`db/migrations/001_initial_schema.sql` Supabase 적용 완료 · seed 미적용)**
-> 최종 수정일: 2026-10-04
+> **상태: 설계 확정 v1.2 (`001_initial_schema.sql` 적용 완료 · `002_add_user_region_name.sql` 작성 완료/Supabase 미적용 · seed 미적용)**
+> 최종 수정일: 2026-11-10
 > 대상: Supabase PostgreSQL 15 이상
 > 서비스 정책 D1~D28은 팀 결정으로 확정되었다 (2장).
 > 17장 "정책 해석 및 확인 필요 사항"은 팀 확인으로 확정되었고 `001_initial_schema.sql`에 반영되었다.
@@ -202,7 +202,8 @@ DB 관리자 ──Supabase 대시보드──▶ reports.status 처리 (D4)
 | email | varchar(255) | NN | | | UNIQUE | `email = lower(email)` | 로그인 ID. 백엔드에서 trim + 소문자로 정규화해 저장. **본인 외 비공개** |
 | password_hash | varchar(100) | NN | | | | | bcrypt 해시. **어떤 API 응답에도 포함 금지** |
 | nickname | varchar(20) | NN | | | UNIQUE | `nickname ~ '^[가-힣a-zA-Z0-9]{2,20}$'` | 공개 표시명. 한글(완성형)·영문·숫자 2~20자 (D17). 변경 제한 없음 (D28) |
-| region_id | bigint | NULL | | FK → regions(id) | | | 내 동네. 가입 직후 미설정 가능 |
+| region_id | bigint | NULL | | FK → regions(id) | | | 기준 지역 ID. 가입 직후 미설정 가능 |
+| region_name | varchar(100) | NULL | | | | | 사용자가 입력한 동네명. 검색 기반 ID 없이 입력 가능 |
 | created_at | timestamptz | NN | now() | | | | |
 | updated_at | timestamptz | NN | now() | | | | |
 
@@ -1332,3 +1333,4 @@ erDiagram
 | 2026-10-04 | v1.1 | 실제 마이그레이션(`db/migrations/001_initial_schema.sql`, Supabase 적용 완료)과 일치하도록 `products.updated_at` 규칙 명시: 상품 정보 컬럼 값이 실제로 바뀔 때만 트리거로 갱신, `view_count` 변경과 같은 값 UPDATE로는 갱신하지 않음, 이미지 변경은 API가 같은 트랜잭션에서 직접 갱신 (4.1, 5.4, 5.5, 10.2, 15.4). 머리말 상태 갱신. 그 밖의 설계 변경 없음 |
 | 2026-10-04 | v1.1 보완 | 18장 정합성 검토를 현재 프로젝트 상태 기준으로 재정리 (해결된 항목: 환경변수 이름, 폴더 구조, `.gitignore` / 남은 차이 4건 / 미확인 항목 분리). 이미 처리된 사항이 미해결처럼 적힌 상태 문구 수정: 4.2 연결 주소, 8.4 한글 검색, 11.4·15.4 트리거 보강 시점, 13장 View, 15.2 `.env`, 17장 머리말. 설계 변경 없음 |
 | 2026-10-04 | v1.1 보완 | DB 관리 원칙 반영: 4.3 "DB 관리 권한" 추가(DB 관리자 1명, 승인 후 migration, `docs/DB_CONNECTION.md` 안내). 신고 처리 주체를 "팀원"에서 "DB 관리자"로 수정(4.2, 5.14, 9.1). 테이블·컬럼·제약 등 설계 변경 없음 |
+| 2026-11-10 | v1.2 | 회원가입에서 동네명을 직접 입력할 수 있도록 `users.region_name` 컬럼 설계 및 migration 추가. 기존 `users.region_id`와 상품 지역 구조는 유지 |

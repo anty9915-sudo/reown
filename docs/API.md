@@ -1,8 +1,8 @@
 # REOWN API 명세
 
-> 상태: 공통 규칙 및 상품 1차 API 작성
+> 상태: 공통 규칙, 인증 및 상품 API 작성
 >
-> 버전: v0.3
+> 버전: v0.4
 
 이 문서는 REOWN 프론트엔드와 백엔드가 같은 형식으로 통신하기 위한 공통 규칙을 정리한다. 회원가입이나 상품 등록 같은 개별 기능은 이 문서에 순서대로 추가한다.
 
@@ -104,16 +104,18 @@ FRONTEND_URL=http://localhost:5173
 | `POST` | `/api/v1/auth/signup` | 불필요 |
 | `POST` | `/api/v1/auth/login` | 불필요 |
 
-회원가입 요청의 `regionId`는 선택 항목이다. DB에 지역 데이터가 준비된 경우 동네 검색 API에서 받은 지역 ID 문자열을 전달한다. 생략하면 동네 미설정 상태로 가입한다.
+회원가입 요청의 `regionName`은 선택 항목이며, 입력한 동네명을 그대로 저장한다. 최대 100자까지 입력할 수 있고 생략하면 동네 미설정 상태로 가입한다. 기존 클라이언트 호환을 위해 `regionId`도 선택적으로 지원한다.
 
 ```json
 {
   "email": "user@example.com",
   "password": "password123",
   "nickname": "동네주민",
-  "regionId": "15"
+  "regionName": "서울시 강남구 역삼동"
 }
 ```
+
+`regionName`과 `regionId`는 각각 자유 입력 동네명과 기준 지역 ID다. 자유 입력 동네명은 계정의 표시 정보이며 상품 거래 지역(`products.region_id`)을 설정하지 않는다.
 
 로그인 요청은 이메일과 비밀번호를 전달한다.
 
@@ -124,7 +126,7 @@ FRONTEND_URL=http://localhost:5173
 }
 ```
 
-회원가입은 `201 Created`, 로그인은 `200 OK`와 함께 `data.accessToken` 및 공개 사용자 정보를 반환한다. 비밀번호 해시는 응답에 포함하지 않는다. 로그인 실패 시 `401 Unauthorized`를 반환한다.
+회원가입은 `201 Created`, 로그인은 `200 OK`와 함께 `data.accessToken` 및 공개 사용자 정보(`regionId`, `regionName` 포함)를 반환한다. 비밀번호 해시는 응답에 포함하지 않는다. 로그인 실패 시 `401 Unauthorized`를 반환한다.
 
 ---
 
@@ -559,6 +561,23 @@ DELETE /api/v1/products/:productId/images/:imageId
 ```
 
 ---
+
+## 채팅 API
+
+### 내 채팅방 목록
+
+```http
+GET /api/v1/chats
+Authorization: Bearer <accessToken>
+```
+
+- 인증한 사용자가 구매자 또는 판매자로 참여 중인 채팅방을 최근 메시지 순으로 반환한다.
+- 각 항목에는 상대방, 상품명, 마지막 메시지 시각, 읽지 않은 메시지 수, 차단 여부를 포함한다.
+- 성공 응답은 `200 OK`, 미인증 요청은 `401 Unauthorized`를 반환한다.
+
+### 채팅방 및 메시지
+
+채팅방 생성은 `POST /api/v1/chats`에 `{ "productId": "1" }`을 보내며, 기존 구매자·상품 조합이 있으면 해당 방 ID를 돌려준다. 채팅방 상세는 `GET /api/v1/chats/:roomId`, 메시지 기록은 `GET /api/v1/chats/:roomId/messages`로 조회한다. 모든 경로는 인증이 필요하며, 참여자가 아닌 사용자는 접근할 수 없다.
 
 ## 14. 변경 이력
 

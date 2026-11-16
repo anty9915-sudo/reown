@@ -6,6 +6,7 @@ interface CreateUserInput {
   passwordHash: string;
   nickname: string;
   regionId: string | null;
+  regionName: string | null;
 }
 
 // 로그인과 이메일 중복 확인에 사용할 회원을 조회한다.
@@ -16,7 +17,8 @@ export const findUserByEmail = async (email: string): Promise<DatabaseRow | null
        email,
        password_hash AS "passwordHash",
        nickname,
-       region_id AS "regionId"
+       region_id AS "regionId",
+       region_name AS "regionName"
      FROM public.users
      WHERE email = $1`,
     [email],
@@ -41,12 +43,13 @@ export const createUser = async ({
   passwordHash,
   nickname,
   regionId,
+  regionName,
 }: CreateUserInput): Promise<DatabaseRow> => {
   const result = await pool.query(
-    `INSERT INTO public.users (email, password_hash, nickname, region_id)
-     VALUES ($1, $2, $3, $4)
-     RETURNING id, email, nickname, region_id AS "regionId"`,
-    [email, passwordHash, nickname, regionId],
+    `INSERT INTO public.users (email, password_hash, nickname, region_id, region_name)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING id, email, nickname, region_id AS "regionId", region_name AS "regionName"`,
+    [email, passwordHash, nickname, regionId, regionName],
   );
 
   return result.rows[0];

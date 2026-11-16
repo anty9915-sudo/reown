@@ -13,10 +13,13 @@ import LocationPage from './location'
 import SellPage from './sell'
 import ProductDetailPage from './ProductDetailPage'
 import ChatRoom from './ChatRoom'
+import ChatLobby from './pages/ChatLobby'
 import NoticePage from './notice'
 import MyPage from './mypage'
 import ReviewPage from './review'
 import OrderHistoryPage from './pages/OrderHistoryPage'
+import InquiryPage from './inquiry'
+import ReportPage from './report'
 
 const rootElement = document.getElementById('root')
 
@@ -37,10 +40,13 @@ createRoot(rootElement).render(
           <Route path="/location" element={<LocationPage />} />
           <Route path="/sell" element={<SellPage />} />
           <Route path="/notice" element={<NoticePage />} />
+          <Route path="/inquiry" element={<InquiryPage />} />
+          <Route path="/report" element={<ReportPage />} />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/mypage" element={<MyPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/chats" element={<ChatLobby />} />
           <Route path="/products/:productId" element={<ProductDetailPage />} />
           <Route path="/chats/:roomId" element={<ChatRoom />} />
           <Route path="*" element={<Navigate to="/" replace />} />

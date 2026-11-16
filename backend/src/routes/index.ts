@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import authRouter from './auth.routes.js';
 import categoriesRouter from './categories.routes.js';
+import chatsRouter from './chats.routes.js';
 import favoritesRouter from './favorites.routes.js';
 import productsRouter from './products.routes.js';
 import regionsRouter from './regions.routes.js';
@@ -12,6 +13,7 @@ const router = Router();
 router.use('/auth', authRouter);
 router.use('/products', productsRouter);
 router.use('/categories', categoriesRouter);
+router.use('/chats', chatsRouter);
 router.use('/favorites', favoritesRouter);
 router.use('/regions', regionsRouter);
 router.use('/transactions', transactionsRouter);

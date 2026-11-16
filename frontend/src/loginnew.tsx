@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import RegionSelector from "./components/RegionSelector";
 import "./Login.css";
 
 type SignupResponse = {
@@ -11,13 +10,19 @@ type SignupResponse = {
 };
 
 // 백엔드가 400 응답의 error.details로 돌려주는 회원가입 입력 필드 (docs/API.md 회원가입)
-type SignupField = "email" | "nickname" | "password" | "regionId";
+type SignupField =
+  | "email"
+  | "nickname"
+  | "password"
+  | "regionId"
+  | "regionName";
 type FieldErrors = Partial<Record<SignupField, string>>;
 const signupFields: SignupField[] = [
   "email",
   "nickname",
   "password",
   "regionId",
+  "regionName",
 ];
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
@@ -32,7 +37,6 @@ function SignupPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [regionId, setRegionId] = useState("");
   const [regionName, setRegionName] = useState("");
   const navigate = useNavigate();
 
@@ -56,12 +60,11 @@ function SignupPage() {
       const response = await fetch(`${apiBaseUrl}/api/v1/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // regionId는 지역 검색 결과의 id 문자열 그대로 보낸다 (숫자로 바꾸지 않는다).
         body: JSON.stringify({
           email,
           password,
           nickname,
-          ...(regionId ? { regionId } : {}),
+          ...(regionName.trim() ? { regionName: regionName.trim() } : {}),
         }),
       });
       const result = (await response.json()) as SignupResponse;
@@ -182,33 +185,28 @@ function SignupPage() {
                 </p>
               )}
 
-              <label id="signup-region-label">내 동네</label>
-              <div
-                aria-labelledby="signup-region-label"
-                className="signup-region-field"
-                role="group"
-              >
-                <RegionSelector
-                  onSelect={(name, region) => {
-                    setRegionName(name);
-                    setRegionId(region.localOnly ? "" : region.id);
-                    setFieldErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.regionId;
-                      return next;
-                    });
-                  }}
-                  selectedRegion={regionName || "동네를 검색해 선택해 주세요"}
-                />
-              </div>
-              {regionName && !regionId && (
-                <p className="signup-region-hint">
-                  예시 동네로 표시 중이며 계정에는 저장되지 않아요.
-                </p>
-              )}
-              {!regionName && (
-                <p className="signup-region-hint">
-                  동네 데이터가 준비되지 않은 경우 선택 없이 가입할 수 있어요.
+              <label htmlFor="signup-region">내 동네</label>
+              <input
+                autoComplete="address-level3"
+                id="signup-region"
+                maxLength={100}
+                onChange={(event) => {
+                  setRegionName(event.target.value);
+                  setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.regionName;
+                    return next;
+                  });
+                }}
+                placeholder="예: 서울시 강남구 역삼동"
+                value={regionName}
+              />
+              <p className="signup-region-hint">
+                동네를 입력하지 않으면 미설정으로 가입됩니다.
+              </p>
+              {fieldErrors.regionName && (
+                <p className="signup-field-error" role="alert">
+                  {fieldErrors.regionName}
                 </p>
               )}
               {fieldErrors.regionId && (

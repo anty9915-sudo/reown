@@ -216,8 +216,8 @@ function ChatRoom() {
     <div className="app-shell">
       <SiteHeader search={search} onSearchChange={setSearch} />
       <main className="chat-main">
-        <Link className="chat-back" to="/market">
-          <span aria-hidden="true">←</span> 상품 목록으로
+        <Link className="chat-back" to="/chats">
+          <span aria-hidden="true">←</span> 채팅 목록으로
         </Link>
         {body}
       </main>
