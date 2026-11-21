@@ -6,6 +6,7 @@ import { imageUrl } from "./utils/imageUrl"
 import SiteHeader from "./components/SiteHeader"
 import { formatPrice } from "./utils/formatprice"
 import { useCart } from "./hooks/cartContext"
+import { getAllProducts } from "./lib/products"
 const allRegionsLabel = "전체지역"
 
 function App() {
@@ -16,20 +17,21 @@ function App() {
   const [selectedRegion, setSelectedRegion] = useState(allRegionsLabel)
   const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false)
   const { cart, toggleCart } = useCart()
+  const allProducts = getAllProducts(products)
   const regions = useMemo(
-    () => [...new Set(products.map((product) => product.location))],
-    [],
+    () => [...new Set(allProducts.map((product) => product.location))],
+    [allProducts],
   )
   const featuredProduct = useMemo(
     () =>
-      products.find((product) => selectedRegion.endsWith(product.location)) ??
-      products[0],
-    [selectedRegion],
+      allProducts.find((product) => selectedRegion.endsWith(product.location)) ??
+      allProducts[0],
+    [selectedRegion, allProducts],
   )
 
   const visibleProducts = useMemo(() => {
     const keyword = search.trim().toLowerCase()
-    const filtered = products.filter((product) => {
+    const filtered = allProducts.filter((product) => {
       const matchesCategory =
         selectedCategory === "전체" || product.category === selectedCategory
       const matchesRegion =
@@ -286,6 +288,9 @@ function App() {
                     {product.badge && (
                       <span className="product-badge">{product.badge}</span>
                     )}
+                    {product.soldOut && (
+                      <span className="product-soldout-badge">품절</span>
+                    )}
                     <button
                       aria-label={
                         favorites.includes(product.id) ? "찜 취소" : "찜하기"
@@ -337,6 +342,11 @@ function App() {
                         {product.likes + Number(favorites.includes(product.id))}
                       </span>
                     </div>
+                    {product.sellerName && (
+                      <span className="product-seller">
+                        판매자 · {product.sellerName}
+                      </span>
+                    )}
                   </div>
                 </article>
               ))}

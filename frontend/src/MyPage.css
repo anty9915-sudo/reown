@@ -55,6 +55,16 @@
   gap: 17px;
 }
 
+.mypage-logout-button {
+  border: 0;
+  background: transparent;
+  color: #737a72;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .mypage-neighborhood {
   display: inline-flex;
   align-items: center;

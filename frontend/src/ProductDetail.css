@@ -102,6 +102,92 @@
   background: #edf0eb;
 }
 
+.product-detail-sold-badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  z-index: 2;
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: #fff;
+  background: #697169;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.product-owner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 20px;
+}
+
+.product-soldout-button,
+.product-delete-button {
+  min-height: 43px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.product-soldout-button {
+  border: 1px solid #98af96;
+  color: #3c7653;
+  background: #f6faf5;
+}
+
+.product-soldout-button.is-soldout {
+  color: #fff;
+  background: #3c7653;
+}
+
+.product-delete-button {
+  border: 1px solid #efd8d3;
+  color: #a85e52;
+  background: #fffaf8;
+}
+
+.product-detail-seller {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid #edf0eb;
+  border-radius: 9px;
+  background: #fbfcfa;
+}
+
+.product-detail-seller > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 50%;
+  color: #58765b;
+  background: #e8f0e5;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.product-detail-seller div {
+  display: grid;
+  gap: 2px;
+}
+
+.product-detail-seller strong {
+  color: #929a90;
+  font-size: 9px;
+}
+
+.product-detail-seller div > span {
+  color: #3d493e;
+  font-size: 12px;
+  font-weight: 750;
+}
+
 .product-detail-info section h2 {
   margin: 0 0 12px;
   color: #3b463c;

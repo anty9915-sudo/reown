@@ -27,6 +27,10 @@ const toPublicUser = (user: DatabaseRow) => ({
   nickname: user.nickname,
   regionId: user.regionId === null ? null : String(user.regionId),
   regionName: user.regionName ?? null,
+  role:
+    user.nickname === 'admin' || user.email === 'admin@reown.local'
+      ? 'admin'
+      : 'user',
 });
 
 const conflictError = (field: string, message: string): AppError =>

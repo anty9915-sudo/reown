@@ -1,9 +1,85 @@
-import { Link } from 'react-router-dom'
-import { categories } from './data/categories'
-import { getSelectedRegion } from './utils/selectedRegion'
-import './Sell.css'
+import { useState, type FormEvent } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { categories } from "./data/categories";
+import { getSelectedRegion } from "./utils/selectedRegion";
+import { getAccessToken, getAuthUser } from "./lib/auth";
+import { addLocalProduct } from "./lib/products";
+import "./Sell.css";
 
 function SellPage() {
+  const navigate = useNavigate();
+  const user = getAccessToken() ? getAuthUser() : null;
+  const [photo, setPhoto] = useState("");
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("");
+  const [price, setPrice] = useState("");
+  const [location, setLocation] = useState(getSelectedRegion);
+  const [notice, setNotice] = useState("");
+  const canSubmit =
+    title.trim().length > 0 &&
+    category !== "" &&
+    price !== "" &&
+    location.trim().length > 0 &&
+    Number.isFinite(Number(price)) &&
+    Number(price) >= 0;
+
+  if (!user) {
+    return <Navigate to="/login" replace state={{ from: "/sell" }} />;
+  }
+
+  const handlePhoto = (file?: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(String(reader.result ?? ""));
+    reader.readAsDataURL(file);
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!canSubmit) {
+      setNotice("필수 항목을 모두 입력해야 상품을 등록할 수 있습니다.");
+      return;
+    }
+
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const title = String(data.get("title") ?? "").trim();
+    const category = String(data.get("category") ?? "");
+    const price = Number(data.get("price"));
+    const description = String(data.get("description") ?? "").trim();
+
+    if (
+      !title ||
+      !category ||
+      !location.trim() ||
+      !Number.isFinite(price) ||
+      price < 0
+    ) {
+      setNotice("상품명, 카테고리, 가격, 거래 지역을 올바르게 입력해 주세요.");
+      return;
+    }
+
+    addLocalProduct({
+      id: Date.now(),
+      title,
+      category,
+      price,
+      location: location.trim(),
+      time: "방금 전",
+      image: photo || "photo-1523275335684-37898b6baf30",
+      likes: 0,
+      sellerId: Number(user.id) || undefined,
+      sellerName: user.nickname,
+      badge: "새 매물",
+      description,
+    });
+
+    navigate("/market", {
+      replace: true,
+      state: { notice: "상품이 등록되었습니다." },
+    });
+  };
+
   return (
     <div className="sell-page">
       <header className="sell-page-header">
@@ -26,9 +102,21 @@ function SellPage() {
         <div className="sell-page-layout">
           <form
             className="sell-form"
-            onSubmit={(event) => event.preventDefault()}
+            onSubmit={handleSubmit}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                (event.target instanceof HTMLInputElement ||
+                  event.target instanceof HTMLSelectElement)
+              ) {
+                event.preventDefault();
+              }
+            }}
           >
-            <section aria-labelledby="sell-photo-title" className="sell-form-section">
+            <section
+              aria-labelledby="sell-photo-title"
+              className="sell-form-section"
+            >
               <div className="sell-section-heading">
                 <span className="sell-section-number">01</span>
                 <div>
@@ -37,14 +125,30 @@ function SellPage() {
                 </div>
               </div>
               <label className="sell-photo-upload">
-                <input accept="image/*" multiple type="file" />
-                <span aria-hidden="true" className="sell-photo-icon">＋</span>
+                <input
+                  accept="image/*"
+                  type="file"
+                  onChange={(event) => handlePhoto(event.target.files?.[0])}
+                />
+                <span aria-hidden="true" className="sell-photo-icon">
+                  ＋
+                </span>
                 <strong>사진 추가하기</strong>
-                <small>상품 사진은 최대 10장까지 등록할 수 있어요.</small>
+                {photo && (
+                  <img
+                    alt="등록할 상품 미리보기"
+                    className="sell-photo-preview"
+                    src={photo}
+                  />
+                )}
+                <small>상품 사진은 1장을 등록할 수 있어요.</small>
               </label>
             </section>
 
-            <section aria-labelledby="sell-info-title" className="sell-form-section">
+            <section
+              aria-labelledby="sell-info-title"
+              className="sell-form-section"
+            >
               <div className="sell-section-heading">
                 <span className="sell-section-number">02</span>
                 <div>
@@ -54,24 +158,66 @@ function SellPage() {
               </div>
 
               <label className="sell-field">
-                <span>상품명 <i>필수</i></span>
-                <input maxLength={60} placeholder="예: 깨끗하게 사용한 무선 이어폰" type="text" />
+                <span>
+                  상품명 <i>필수</i>
+                </span>
+                <input
+                  name="title"
+                  maxLength={60}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                    setNotice("");
+                  }}
+                  placeholder="예: 깨끗하게 사용한 무선 이어폰"
+                  required
+                  type="text"
+                  value={title}
+                />
               </label>
 
               <label className="sell-field">
-                <span>카테고리 <i>필수</i></span>
-                <select defaultValue="">
-                  <option disabled value="">카테고리를 선택해 주세요</option>
-                  {categories.filter((category) => category !== '전체').map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
+                <span>
+                  카테고리 <i>필수</i>
+                </span>
+                <select
+                  name="category"
+                  onChange={(event) => {
+                    setCategory(event.target.value);
+                    setNotice("");
+                  }}
+                  required
+                  value={category}
+                >
+                  <option disabled value="">
+                    카테고리를 선택해 주세요
+                  </option>
+                  {categories
+                    .filter((category) => category !== "전체")
+                    .map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
                 </select>
               </label>
 
               <label className="sell-field">
-                <span>가격 <i>필수</i></span>
+                <span>
+                  가격 <i>필수</i>
+                </span>
                 <div className="sell-price-input">
-                  <input min="0" placeholder="가격을 입력해 주세요" type="number" />
+                  <input
+                    name="price"
+                    min="0"
+                    onChange={(event) => {
+                      setPrice(event.target.value);
+                      setNotice("");
+                    }}
+                    placeholder="가격을 입력해 주세요"
+                    required
+                    type="number"
+                    value={price}
+                  />
                   <span>원</span>
                 </div>
               </label>
@@ -79,27 +225,44 @@ function SellPage() {
               <label className="sell-field">
                 <span>상품 설명</span>
                 <textarea
+                  name="description"
                   maxLength={2000}
                   placeholder="상품의 상태, 사용 기간, 거래 시 참고할 내용을 적어 주세요."
                   rows={6}
                 />
               </label>
 
-              <div className="sell-field">
-                <span>거래 지역</span>
-                <div className="sell-region-value">
-                  <span aria-hidden="true">⌖</span>
-                  {getSelectedRegion()}
-                </div>
-                <small className="sell-field-hint">내 지역 설정을 기준으로 표시돼요.</small>
-              </div>
+              <label className="sell-field">
+                <span>
+                  거래 지역 <i>필수</i>
+                </span>
+                <input
+                  name="location"
+                  maxLength={100}
+                  onChange={(event) => {
+                    setLocation(event.target.value);
+                    setNotice("");
+                  }}
+                  placeholder="예: 서울시 강남구 역삼동"
+                  required
+                  type="text"
+                  value={location}
+                />
+                <small className="sell-field-hint">
+                  거래 장소를 동 단위까지 직접 입력해 주세요.
+                </small>
+              </label>
             </section>
 
             <div className="sell-submit-area">
-              <button className="sell-submit-button" disabled type="button">
-                상품 등록 준비 중
+              <button
+                className="sell-submit-button"
+                disabled={!canSubmit}
+                type="submit"
+              >
+                상품 등록
               </button>
-              <p>상품 등록 기능은 현재 준비 중이에요.</p>
+              {notice && <p role="alert">{notice}</p>}
             </div>
           </form>
 
@@ -110,17 +273,33 @@ function SellPage() {
                 <span>r</span>
                 <i>✦</i>
               </div>
-              <span className="sell-aside-sparkle sell-aside-sparkle-one">✳</span>
-              <span className="sell-aside-sparkle sell-aside-sparkle-two">✦</span>
+              <span className="sell-aside-sparkle sell-aside-sparkle-one">
+                ✳
+              </span>
+              <span className="sell-aside-sparkle sell-aside-sparkle-two">
+                ✦
+              </span>
             </div>
             <span className="sell-aside-kicker">A LITTLE SELLING GUIDE</span>
-            <h2>좋은 거래는<br />좋은 소개에서 시작돼요.</h2>
+            <h2>
+              좋은 거래는
+              <br />
+              좋은 소개에서 시작돼요.
+            </h2>
             <ul>
-              <li><span>✓</span> 밝은 곳에서 상품 사진을 찍어 주세요.</li>
-              <li><span>✓</span> 사용감이나 흠집도 솔직하게 알려 주세요.</li>
-              <li><span>✓</span> 거래 조건을 미리 정하면 더 편리해요.</li>
+              <li>
+                <span>✓</span> 밝은 곳에서 상품 사진을 찍어 주세요.
+              </li>
+              <li>
+                <span>✓</span> 사용감이나 흠집도 솔직하게 알려 주세요.
+              </li>
+              <li>
+                <span>✓</span> 거래 조건을 미리 정하면 더 편리해요.
+              </li>
             </ul>
-            <Link to="/safedeal">안전거래 알아보기 <span aria-hidden="true">→</span></Link>
+            <Link to="/safedeal">
+              안전거래 알아보기 <span aria-hidden="true">→</span>
+            </Link>
           </aside>
         </div>
       </main>
@@ -131,7 +310,7 @@ function SellPage() {
         <small>© 2026 reown. All rights reserved.</small>
       </footer>
     </div>
-  )
+  );
 }
 
-export default SellPage
+export default SellPage;

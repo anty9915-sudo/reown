@@ -16,6 +16,7 @@ dist-ssr
 .env
 .env.*
 !.env.example
+.reown-dev/
 
 # DBeaver 프로젝트 설정 (저장된 DB 비밀번호가 포함될 수 있다. docs/DB_CONNECTION.md)
 .dbeaver/

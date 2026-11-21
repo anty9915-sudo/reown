@@ -8,6 +8,7 @@ import { imageUrl } from './utils/imageUrl'
 import RegionSelector from './components/RegionSelector'
 import { getSelectedRegion, saveSelectedRegion } from './utils/selectedRegion'
 import { useCart } from './hooks/cartContext'
+import { getAllProducts } from './lib/products'
 import './App.css'
 
 function MarketPage() {
@@ -17,10 +18,11 @@ function MarketPage() {
   const [favorites, setFavorites] = useState<number[]>([])
   const [selectedRegion, setSelectedRegion] = useState(getSelectedRegion)
   const { cart, toggleCart } = useCart()
+  const allProducts = getAllProducts(products)
 
   const visibleProducts = useMemo(() => {
     const keyword = search.trim().toLowerCase()
-    const filtered = products.filter((product) => {
+    const filtered = allProducts.filter((product) => {
       const matchesCategory =
         selectedCategory === '전체' || product.category === selectedCategory
       const matchesSearch =
@@ -124,6 +126,9 @@ function MarketPage() {
                       {product.badge && (
                         <span className="product-badge">{product.badge}</span>
                       )}
+                      {product.soldOut && (
+                        <span className="product-soldout-badge">품절</span>
+                      )}
                       <button
                         aria-label={isFavorite ? '찜 취소' : '찜하기'}
                         aria-pressed={isFavorite}
@@ -176,6 +181,11 @@ function MarketPage() {
                           {product.likes + Number(isFavorite)}
                         </span>
                       </div>
+                      {product.sellerName && (
+                        <span className="product-seller">
+                          판매자 · {product.sellerName}
+                        </span>
+                      )}
                     </div>
                   </article>
                 )

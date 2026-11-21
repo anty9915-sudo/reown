@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url';
+import { randomBytes } from 'node:crypto';
 import dotenv from 'dotenv';
 
 const envPath = fileURLToPath(new URL('../../../.env', import.meta.url));
@@ -25,15 +26,20 @@ const frontendUrls = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .map((url) => url.trim())
   .filter(Boolean);
 
-const jwtSecret = required('JWT_SECRET');
+const configuredJwtSecret = process.env.JWT_SECRET?.trim();
+const jwtSecret =
+  configuredJwtSecret || randomBytes(48).toString('base64url');
 
-if (Buffer.byteLength(jwtSecret, 'utf8') < 32) {
+if (
+  configuredJwtSecret &&
+  Buffer.byteLength(configuredJwtSecret, 'utf8') < 32
+) {
   throw new Error('JWT_SECRET은 32바이트 이상이어야 합니다.');
 }
 
 const env = {
   port,
-  databaseUrl: required('DATABASE_URL'),
+  databaseUrl: process.env.DATABASE_URL?.trim() || null,
   jwtSecret,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN?.trim() || '2h',
   frontendUrls,

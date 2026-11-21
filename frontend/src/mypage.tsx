@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
+import { clearAuth, getAccessToken, getAuthUser } from "./lib/auth";
+import { disconnectSocket } from "./lib/socket";
 import "./MyPage.css";
 
 const profileMenus = [
@@ -61,6 +64,22 @@ const receivedReviews = [
 
 function MyPage() {
   const [activeMenu, setActiveMenu] = useState<string>("overview");
+  const navigate = useNavigate();
+  const user = getAccessToken() ? getAuthUser() : null;
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const nickname = user.nickname;
+  const nicknameInitial = nickname.slice(0, 1);
+  const regionLabel = user.regionName?.trim() || "동네 미설정";
+
+  const handleLogout = () => {
+    disconnectSocket();
+    clearAuth();
+    navigate("/", { replace: true });
+  };
 
   const activeMenuLabel =
     profileMenus.find((menu) => menu.id === activeMenu)?.label ?? "마이페이지";
@@ -74,7 +93,7 @@ function MyPage() {
         </a>
         <div className="mypage-header-right">
           <span className="mypage-neighborhood">
-            <span aria-hidden="true">⌖</span> 서울특별시 강남구
+            <span aria-hidden="true">⌖</span> {regionLabel}
           </span>
           <button
             aria-label="알림"
@@ -84,11 +103,19 @@ function MyPage() {
             ♧
           </button>
           <button
-            aria-label="프로필 메뉴"
+            aria-label={`${nickname} 프로필`}
             className="mypage-avatar-small"
             type="button"
+            onClick={() => setActiveMenu("overview")}
           >
-            이
+            {nicknameInitial}
+          </button>
+          <button
+            className="mypage-logout-button"
+            onClick={handleLogout}
+            type="button"
+          >
+            로그아웃
           </button>
         </div>
       </header>
@@ -96,10 +123,10 @@ function MyPage() {
       <div className="mypage-layout">
         <aside aria-label="마이페이지 메뉴" className="mypage-sidebar">
           <div className="mypage-profile-mini">
-            <div className="mypage-avatar">이</div>
+            <div className="mypage-avatar">{nicknameInitial}</div>
             <div>
-              <strong>이웃님</strong>
-              <span>서울 강남구 · 이웃</span>
+              <strong>{nickname}</strong>
+              <span>{regionLabel} · 이웃</span>
             </div>
           </div>
           <nav className="mypage-menu">
@@ -138,7 +165,7 @@ function MyPage() {
             <div>
               <span className="mypage-eyebrow">MY NEIGHBORHOOD LIFE</span>
               <h1>{activeMenuLabel}</h1>
-              <p>이웃님과 REOWN의 소중한 기록을 모아봤어요.</p>
+              <p>{nickname}님과 REOWN의 소중한 기록을 모아봤어요.</p>
             </div>
             <button className="mypage-edit-button" type="button">
               <span aria-hidden="true">✎</span> 프로필 수정
@@ -150,10 +177,10 @@ function MyPage() {
               <span className="mypage-welcome-label">
                 <span /> REOWN NEIGHBOR
               </span>
-              <h2>이웃님, 반가워요!</h2>
+              <h2>{nickname}님, 반가워요!</h2>
               <p>오늘도 가까운 이웃과 기분 좋은 거래를 만들어 보세요.</p>
               <div className="mypage-badges">
-                <span>⌖ 강남구 이웃</span>
+                <span>⌖ {regionLabel} 이웃</span>
                 <span>✦ 따뜻한 거래를 이어가는 중</span>
               </div>
             </div>

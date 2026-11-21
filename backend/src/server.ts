@@ -7,5 +7,8 @@ const httpServer = createServer(app);
 initializeSocketServer(httpServer);
 
 httpServer.listen(env.port, () => {
-  console.log(`REOWN backend listening on http://localhost:${env.port}`);
+  const mode = env.databaseUrl ? 'Supabase' : 'local dev JSON';
+  console.log(
+    `REOWN backend listening on http://localhost:${env.port} (${mode})`,
+  );
 });

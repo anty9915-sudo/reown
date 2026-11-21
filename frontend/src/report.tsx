@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react"
 import { Link } from "react-router-dom"
 import SiteHeader from "./components/SiteHeader"
 import "./report.css"
+import { addReport } from "./lib/support"
 
 function ReportPage() {
   const [search, setSearch] = useState("")
@@ -9,9 +10,19 @@ function ReportPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setNotice(
-      "신고 접수 기능이 아직 연결되지 않아 전송되지 않았어요. 작성한 내용은 저장되지 않았습니다.",
-    )
+    const form = event.currentTarget
+    const data = new FormData(form)
+    addReport({
+      id: String(Date.now()),
+      createdAt: new Date().toISOString(),
+      reason: String(data.get("reason") ?? ""),
+      reportedUserId: String(data.get("reportedUserId") ?? ""),
+      productId: String(data.get("productId") ?? ""),
+      chatRoomId: String(data.get("chatRoomId") ?? ""),
+      content: String(data.get("content") ?? ""),
+    })
+    form.reset()
+    setNotice("신고가 접수되었습니다.")
   }
 
   return (
@@ -104,8 +115,7 @@ function ReportPage() {
               신고 접수
             </button>
             <p className="report-form-footnote">
-              현재 신고 접수 기능을 준비 중입니다. 제출해도 내용이 전송되거나
-              저장되지 않습니다.
+              접수된 신고는 관리자 페이지에서 확인할 수 있습니다.
             </p>
           </form>
         </section>

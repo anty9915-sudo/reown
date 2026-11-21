@@ -1,0 +1,120 @@
+.admin-page {
+  min-height: 100vh;
+  background: #f7f9f5;
+  color: #26342a;
+}
+
+.admin-header {
+  display: flex;
+  height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(22px, 5vw, 72px);
+  border-bottom: 1px solid #e8ede6;
+  background: #fff;
+}
+
+.admin-header > div {
+  display: grid;
+  text-align: right;
+}
+
+.admin-header > div span {
+  color: #718071;
+  font-size: 12px;
+}
+
+.admin-content {
+  width: min(980px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0;
+}
+
+.admin-content h1 {
+  margin: 0 0 24px;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-tabs button {
+  border: 1px solid #dde5dc;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  color: #697568;
+  cursor: pointer;
+}
+
+.admin-tabs button.active {
+  border-color: #3c7653;
+  background: #3c7653;
+  color: #fff;
+}
+
+.admin-tabs span {
+  margin-left: 5px;
+  font-weight: 800;
+}
+
+.admin-list {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-record,
+.admin-empty {
+  border: 1px solid #e5eae3;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.admin-empty {
+  padding: 32px;
+  text-align: center;
+  color: #7d887c;
+}
+
+.admin-record {
+  padding: 18px;
+}
+
+.admin-record > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-record time {
+  color: #879084;
+  font-size: 12px;
+}
+
+.admin-record dl {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  color: #687568;
+  font-size: 13px;
+}
+
+.admin-record dt {
+  margin-left: 12px;
+  font-weight: 700;
+}
+
+.admin-record dt:first-child {
+  margin-left: 0;
+}
+
+.admin-record dd {
+  margin: 0;
+}
+
+.admin-record p {
+  margin: 0;
+  white-space: pre-wrap;
+}

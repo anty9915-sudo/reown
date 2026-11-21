@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { disconnectSocket } from "./lib/socket";
+import { saveAuth, type AuthUser } from "./lib/auth";
 import "./Login.css";
 
 type LoginResponse = {
   data?: {
     accessToken?: string;
+    user?: AuthUser;
   };
   error?: {
     message?: string;
@@ -13,8 +15,6 @@ type LoginResponse = {
 };
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "";
-const accessTokenKey = "reown-access-token";
-
 function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,20 +53,16 @@ function LoginPage() {
       }
 
       const accessToken = result.data?.accessToken;
-      if (!accessToken) {
+      const user = result.data?.user;
+      if (!accessToken || !user) {
         setNotice(
-          "로그인 응답에 인증 정보가 없습니다. 잠시 후 다시 시도해 주세요.",
+          "로그인 응답에 사용자 정보가 없습니다. 잠시 후 다시 시도해 주세요.",
         );
         return;
       }
 
       disconnectSocket();
-      window.localStorage.removeItem(accessTokenKey);
-      window.sessionStorage.removeItem(accessTokenKey);
-      const storage = rememberLogin
-        ? window.localStorage
-        : window.sessionStorage;
-      storage.setItem(accessTokenKey, accessToken);
+      saveAuth(accessToken, user, rememberLogin);
 
       const redirectTo =
         locationState?.from === "/safedeal" ? "/safedeal" : "/";

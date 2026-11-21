@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { clearAuth, getAccessToken, getAuthUser } from "../lib/auth";
+import { disconnectSocket } from "../lib/socket";
 
 const menuGroups = [
   {
@@ -39,6 +41,18 @@ type SiteHeaderProps = {
 function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const user = getAccessToken() ? getAuthUser() : null;
+  const visibleMenuGroups = user
+    ? menuGroups
+    : menuGroups.filter((group) => group.id !== "support");
+
+  const handleLogout = () => {
+    disconnectSocket();
+    clearAuth();
+    setOpenMenu(null);
+    navigate("/", { replace: true });
+  };
 
   return (
     <header className="site-header">
@@ -48,7 +62,7 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
           <span>reown</span>
         </Link>
         <nav className="main-nav" aria-label="주요 메뉴">
-          {menuGroups.map((group) => {
+          {visibleMenuGroups.map((group) => {
             const isActive = group.links.some((item) => item.to === pathname);
             const isOpen = openMenu === group.id;
             return (
@@ -111,9 +125,29 @@ function SiteHeader({ search, onSearchChange }: SiteHeaderProps) {
             />
             <kbd>⌘ K</kbd>
           </label>
-          <Link className="login-button" to="/login">
-            로그인
-          </Link>
+          {user ? (
+            <>
+              {user.role === "admin" && (
+                <Link className="user-name-button" to="/admin">
+                  관리자 페이지
+                </Link>
+              )}
+              <Link className="user-name-button" to="/mypage">
+                {user.nickname}
+              </Link>
+              <button
+                className="logout-button"
+                onClick={handleLogout}
+                type="button"
+              >
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <Link className="login-button" to="/login">
+              로그인
+            </Link>
+          )}
           <Link className="sell-button" to="/sell">
             <span aria-hidden="true">＋</span> 판매하기
           </Link>

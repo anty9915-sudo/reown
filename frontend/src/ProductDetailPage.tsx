@@ -5,6 +5,12 @@ import { ApiError, createChatRoom } from "./api/chats"
 import { products } from "./data/products"
 import { formatPrice } from "./utils/formatprice"
 import { imageUrl } from "./utils/imageUrl"
+import {
+  deleteLocalProduct,
+  getAllProducts,
+  updateLocalProduct,
+} from "./lib/products"
+import { getAccessToken, getAuthUser } from "./lib/auth"
 import "./ProductDetail.css"
 
 function ProductDetailPage() {
@@ -13,7 +19,30 @@ function ProductDetailPage() {
   const [search, setSearch] = useState("")
   const [starting, setStarting] = useState(false)
   const [chatError, setChatError] = useState("")
-  const product = products.find((item) => item.id === Number(productId))
+  const [actionVersion, setActionVersion] = useState(0)
+  const product = getAllProducts(products).find(
+    (item) => item.id === Number(productId),
+  )
+  void actionVersion
+  const currentUser = getAccessToken() ? getAuthUser() : null
+  const isOwner =
+    !!product &&
+    !!currentUser &&
+    (product.sellerId === Number(currentUser.id) ||
+      product.sellerName === currentUser.nickname)
+  const toggleSoldOut = () => {
+    if (!product || !isOwner) return
+    updateLocalProduct(product.id, { soldOut: !product.soldOut })
+    setActionVersion((version) => version + 1)
+  }
+
+  const deleteProduct = () => {
+    if (!product || !isOwner) return
+    if (!window.confirm("이 상품을 삭제하시겠습니까?")) return
+    deleteLocalProduct(product.id)
+    setActionVersion((version) => version + 1)
+    navigate("/market", { replace: true })
+  }
 
   const startChat = async () => {
     if (!product || starting) return
@@ -45,6 +74,9 @@ function ProductDetailPage() {
           <article className="product-detail">
             <div className="product-detail-image">
               <img src={imageUrl(product.image)} alt={product.title} />
+              {product.soldOut && (
+                <span className="product-detail-sold-badge">품절</span>
+              )}
               {product.badge && (
                 <span className="product-badge">{product.badge}</span>
               )}
@@ -68,11 +100,20 @@ function ProductDetailPage() {
               </strong>
 
               <div className="product-detail-divider" />
+              {product.sellerName && (
+                <div className="product-detail-seller">
+                  <span>{product.sellerName.slice(0, 1)}</span>
+                  <div>
+                    <strong>판매자</strong>
+                    <span>{product.sellerName}</span>
+                  </div>
+                </div>
+              )}
               <section aria-labelledby="product-description-title">
                 <h2 id="product-description-title">상품 설명</h2>
                 <p>
-                  등록된 상품 정보를 확인해 주세요. 상품의 자세한 상태와 거래
-                  조건은 판매자에게 문의해 주세요.
+                  {product.description?.trim() ||
+                    "등록된 상품 정보를 확인해 주세요. 상품의 자세한 상태와 거래 조건은 판매자에게 문의해 주세요."}
                 </p>
               </section>
 
@@ -84,14 +125,37 @@ function ProductDetailPage() {
                 </div>
               </div>
 
-              <button
-                className="product-detail-contact"
-                onClick={startChat}
-                disabled={starting}
-                type="button"
-              >
-                {starting ? "채팅방 여는 중..." : "판매자에게 문의하기"}
-              </button>
+              {isOwner ? (
+                <div className="product-owner-actions">
+                  <button
+                    className={`product-soldout-button${product.soldOut ? " is-soldout" : ""}`}
+                    onClick={toggleSoldOut}
+                    type="button"
+                  >
+                    {product.soldOut ? "판매중으로 변경" : "품절 처리"}
+                  </button>
+                  <button
+                    className="product-delete-button"
+                    onClick={deleteProduct}
+                    type="button"
+                  >
+                    상품 삭제
+                  </button>
+                </div>
+              ) : (
+                <button
+                  className="product-detail-contact"
+                  onClick={startChat}
+                  disabled={starting || product.soldOut}
+                  type="button"
+                >
+                  {product.soldOut
+                    ? "품절된 상품이에요"
+                    : starting
+                      ? "채팅방 여는 중..."
+                      : "판매자에게 문의하기"}
+                </button>
+              )}
               {chatError && (
                 <p className="product-detail-note" role="alert">
                   {chatError}

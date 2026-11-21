@@ -1,4 +1,5 @@
 import { StrictMode } from 'react'
+import type { ReactNode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import './index.css'
@@ -20,11 +21,18 @@ import ReviewPage from './review'
 import OrderHistoryPage from './pages/OrderHistoryPage'
 import InquiryPage from './inquiry'
 import ReportPage from './report'
+import AdminPage from './AdminPage'
+import { getAccessToken, getAuthUser } from './lib/auth'
 
 const rootElement = document.getElementById('root')
 
 if (!rootElement) {
   throw new Error('React 앱을 연결할 #root 요소를 찾을 수 없습니다.')
+}
+
+function ProtectedRoute({ children }: { children: ReactNode }) {
+  const user = getAccessToken() ? getAuthUser() : null
+  return user ? children : <Navigate to="/login" replace />
 }
 
 createRoot(rootElement).render(
@@ -40,10 +48,25 @@ createRoot(rootElement).render(
           <Route path="/location" element={<LocationPage />} />
           <Route path="/sell" element={<SellPage />} />
           <Route path="/notice" element={<NoticePage />} />
-          <Route path="/inquiry" element={<InquiryPage />} />
-          <Route path="/report" element={<ReportPage />} />
+          <Route
+            path="/inquiry"
+            element={
+              <ProtectedRoute>
+                <InquiryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/report"
+            element={
+              <ProtectedRoute>
+                <ReportPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/review" element={<ReviewPage />} />
           <Route path="/mypage" element={<MyPage />} />
+          <Route path="/admin" element={<AdminPage />} />
           <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/chats" element={<ChatLobby />} />

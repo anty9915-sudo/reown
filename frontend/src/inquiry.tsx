@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react"
 import { Link } from "react-router-dom"
 import SiteHeader from "./components/SiteHeader"
 import "./inquiry.css"
+import { addInquiry } from "./lib/support"
 
 function InquiryPage() {
   const [search, setSearch] = useState("")
@@ -9,9 +10,18 @@ function InquiryPage() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setNotice(
-      "문의 접수 기능이 아직 연결되지 않아 전송되지 않았어요. 작성한 내용은 저장되지 않았습니다.",
-    )
+    const form = event.currentTarget
+    const data = new FormData(form)
+    addInquiry({
+      id: String(Date.now()),
+      createdAt: new Date().toISOString(),
+      category: String(data.get("category") ?? ""),
+      email: String(data.get("email") ?? ""),
+      title: String(data.get("title") ?? ""),
+      message: String(data.get("message") ?? ""),
+    })
+    form.reset()
+    setNotice("문의가 접수되었습니다.")
   }
 
   return (
@@ -99,8 +109,7 @@ function InquiryPage() {
                 문의 접수
               </button>
               <p className="inquiry-form-footnote">
-                현재 문의 접수 기능을 준비 중입니다. 제출해도 내용이 전송되거나
-                저장되지 않습니다.
+                접수된 문의는 관리자 페이지에서 확인할 수 있습니다.
               </p>
             </form>
           </section>

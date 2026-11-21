@@ -8,8 +8,11 @@ export type Product = {
   image: string;
   likes: number;
   sellerId?: number;
+  sellerName?: string;
   deletedAt?: string | null;
   badge?: string;
+  description?: string;
+  soldOut?: boolean;
 };
 
 export const products: Product[] = [
