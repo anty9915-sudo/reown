@@ -2,6 +2,12 @@ import { useCallback, useEffect, useState } from "react"
 import { ApiError, fetchChatRoom, fetchMessages } from "../api/chats"
 import { CHAT_EVENTS, getSocket } from "../lib/socket"
 import type { ChatRoomInfo, Message, SocketAck } from "../types/chat"
+import {
+  addLocalChatMessage,
+  getLocalChatRoom,
+  isLocalChatRoom,
+} from "../lib/localChats"
+import { getAuthUser } from "../lib/auth"
 
 export const MAX_LENGTH = 1000
 
@@ -25,6 +31,25 @@ export function useChatRoom(roomId: string) {
   }, [roomId])
 
   useEffect(() => {
+    if (isLocalChatRoom(roomId)) {
+      const currentUser = getAuthUser()
+      const chat = getLocalChatRoom(
+        roomId,
+        currentUser?.id,
+        currentUser?.nickname,
+      )
+      setRoom(chat?.room ?? null)
+      setMessages(chat?.messages ?? [])
+      setLoading(false)
+      setConnected(true)
+      setLoadError(
+        chat
+          ? null
+          : new ApiError("채팅방을 찾을 수 없어요.", 404),
+      )
+      return
+    }
+
     let cancelled = false
     const socket = getSocket()
 
@@ -110,8 +135,19 @@ export function useChatRoom(roomId: string) {
 
   // 전송: 성공하면 true
   const send = useCallback(
-    (content: string) =>
-      new Promise<boolean>((resolve) => {
+    (content: string) => {
+      if (isLocalChatRoom(roomId)) {
+        const message = addLocalChatMessage(roomId, myId ?? "", content)
+        if (!message) {
+          setSendError("메시지를 저장할 수 없어요.")
+          return Promise.resolve(false)
+        }
+        setMessages((current) => [...current, message])
+        setSendError("")
+        return Promise.resolve(true)
+      }
+
+      return new Promise<boolean>((resolve) => {
         setSendError("")
         getSocket().emit(
           CHAT_EVENTS.send,
@@ -132,8 +168,9 @@ export function useChatRoom(roomId: string) {
             resolve(true)
           },
         )
-      }),
-    [roomId],
+      })
+    },
+    [roomId, myId],
   )
 
   return {

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import SiteHeader from "../components/SiteHeader"
 import { ApiError, fetchChatRooms, getToken, type ChatListItem } from "../api/chats"
+import { getAuthUser } from "../lib/auth"
+import { getLocalChatRooms } from "../lib/localChats"
 import "../styles/ChatLobby.css"
 
 const formatMessageTime = (iso: string | null) => {
@@ -25,6 +27,30 @@ function ChatLobby() {
   const [loading, setLoading] = useState(() => Boolean(getToken()))
   const [error, setError] = useState("")
   const [retry, setRetry] = useState(0)
+  const currentUser = getAuthUser()
+  const localRooms: ChatListItem[] = useMemo(() => {
+    if (!currentUser) return []
+    return getLocalChatRooms(currentUser.id, currentUser.nickname).map((chat) => {
+      const lastMessage = chat.messages.at(-1) ?? null
+      const isSeller = chat.room.partner.id === currentUser.id
+      return {
+        id: chat.room.id,
+        productId: chat.room.product.id,
+        productTitle: chat.room.product.title,
+        partner: isSeller
+          ? {
+              id: chat.buyer?.id ?? "",
+              nickname: chat.buyer?.nickname ?? "구매자",
+            }
+          : chat.room.partner,
+        lastMessage: lastMessage?.content ?? null,
+        lastSenderId: lastMessage?.senderId ?? null,
+        lastMessageAt: lastMessage?.createdAt ?? null,
+        unreadCount: lastMessage && lastMessage.senderId !== currentUser.id ? 1 : 0,
+        blocked: chat.room.blocked,
+      }
+    })
+  }, [currentUser?.id, currentUser?.nickname, retry])
 
   useEffect(() => {
     // TODO: 로그인 없이 로비 UI를 미리 볼 수 있도록 임시로 인증 진입을 허용한다.
@@ -64,14 +90,25 @@ function ChatLobby() {
   }, [retry])
 
   const filteredRooms = useMemo(() => {
+    const mergedRooms = [
+      ...localRooms,
+      ...rooms.filter(
+        (room) => !localRooms.some((localRoom) => localRoom.id === room.id),
+      ),
+    ].sort((a, b) => {
+      const aTime = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0
+      const bTime = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0
+      return bTime - aTime
+    })
+
     const keyword = search.trim().toLocaleLowerCase()
-    if (!keyword) return rooms
-    return rooms.filter((room) =>
+    if (!keyword) return mergedRooms
+    return mergedRooms.filter((room) =>
       `${room.partner.nickname} ${room.productTitle} ${room.lastMessage ?? ""}`
         .toLocaleLowerCase()
         .includes(keyword),
     )
-  }, [rooms, search])
+  }, [rooms, localRooms, search])
 
   return (
     <div className="app-shell">
@@ -102,11 +139,11 @@ function ChatLobby() {
         </label>
 
         <section className="chat-lobby-list" aria-label="채팅 목록">
-          {loading ? (
+          {loading && filteredRooms.length === 0 ? (
             <p className="chat-lobby-state" role="status">
               채팅 목록을 불러오는 중...
             </p>
-          ) : error ? (
+          ) : error && filteredRooms.length === 0 ? (
             <div className="chat-lobby-state" role="alert">
               <p>{error}</p>
               {isLoggedIn ? (

@@ -66,7 +66,7 @@ function SellPage() {
       price,
       location: location.trim(),
       time: "방금 전",
-      image: photo || "photo-1523275335684-37898b6baf30",
+      image: photo,
       likes: 0,
       sellerId: Number(user.id) || undefined,
       sellerName: user.nickname,

@@ -96,7 +96,15 @@ function LocationPage() {
                       className="product-image-link"
                       to={`/products/${product.id}`}
                     >
-                      <img src={imageUrl(product.image)} alt={product.title} />
+                      {product.image ? (
+                        <img src={imageUrl(product.image)} alt={product.title} />
+                      ) : (
+                        <div
+                          className="product-image-placeholder"
+                          role="img"
+                          aria-label="상품 사진 없음"
+                        />
+                      )}
                     </Link>
                     {product.badge && (
                       <span className="product-badge">{product.badge}</span>

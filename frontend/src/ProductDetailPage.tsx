@@ -11,6 +11,7 @@ import {
   updateLocalProduct,
 } from "./lib/products"
 import { getAccessToken, getAuthUser } from "./lib/auth"
+import { createLocalChatRoom } from "./lib/localChats"
 import "./ProductDetail.css"
 
 function ProductDetailPage() {
@@ -46,9 +47,18 @@ function ProductDetailPage() {
 
   const startChat = async () => {
     if (!product || starting) return
+    if (!currentUser) {
+      navigate("/login", { state: { from: `/products/${product.id}` } })
+      return
+    }
     setStarting(true)
     setChatError("")
     try {
+      if (product.sellerId || product.sellerName) {
+        const roomId = createLocalChatRoom(product, currentUser)
+        navigate(`/chats/${roomId}`)
+        return
+      }
       const { roomId } = await createChatRoom(product.id)
       navigate(`/chats/${roomId}`)
     } catch (e) {
@@ -73,7 +83,15 @@ function ProductDetailPage() {
 
           <article className="product-detail">
             <div className="product-detail-image">
-              <img src={imageUrl(product.image)} alt={product.title} />
+              {product.image ? (
+                <img src={imageUrl(product.image)} alt={product.title} />
+              ) : (
+                <div
+                  className="product-detail-image-placeholder"
+                  role="img"
+                  aria-label="상품 사진 없음"
+                />
+              )}
               {product.soldOut && (
                 <span className="product-detail-sold-badge">품절</span>
               )}
