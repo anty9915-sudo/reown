@@ -106,6 +106,11 @@ FRONTEND_URL=http://localhost:5173
 
 회원가입 요청의 `regionName`은 선택 항목이며, 입력한 동네명을 그대로 저장한다. 최대 100자까지 입력할 수 있고 생략하면 동네 미설정 상태로 가입한다. 기존 클라이언트 호환을 위해 `regionId`도 선택적으로 지원한다.
 
+- `regionName`은 자유 입력 문자열이다. 생략, `null`, 빈 문자열, 공백만 입력한 경우에는 미설정(`null`)으로 처리한다.
+- `regionId`도 생략, `null`, 빈 문자열, 공백만 입력한 경우에는 미설정(`null`)으로 처리한다. 값이 있다면 앞뒤 공백을 제거하고 1 이상 PostgreSQL BIGINT 상한 이하의 정수 문자열인지 검증한다.
+- 동네 입력란의 글자를 `regionId`로 보내지 않는다. 프론트는 동네명을 `regionName`으로 보내며 실제 지역 ID를 반드시 선택할 필요는 없다.
+- 배포 서버에서 지역 ID를 필수로 요구하면 구버전 서버가 실행 중인지 확인한다. 백엔드는 `npm ci --include=dev`로 빌드 의존성을 설치하고 `npm run build` 후 `npm start`로 실행한다. `npm start`의 `prestart`도 최신 TypeScript 소스를 빌드해 이전 `dist` 실행을 방지한다.
+
 ```json
 {
   "email": "user@example.com",

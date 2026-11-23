@@ -7,8 +7,10 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
+    "prestart": "npm run build",
     "start": "node dist/server.js",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/auth-region.test.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

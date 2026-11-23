@@ -14,14 +14,12 @@ type SignupField =
   | "email"
   | "nickname"
   | "password"
-  | "regionId"
   | "regionName";
 type FieldErrors = Partial<Record<SignupField, string>>;
 const signupFields: SignupField[] = [
   "email",
   "nickname",
   "password",
-  "regionId",
   "regionName",
 ];
 
@@ -76,8 +74,11 @@ function SignupPage() {
           if (details[field]) nextFieldErrors[field] = details[field];
         }
         setFieldErrors(nextFieldErrors);
+        // 이 화면은 regionId를 보내지 않는다. 이를 요구하는 응답은 이전 서버 형식이다.
         setErrorMessage(
-          result.error?.message ??
+          details.regionId
+            ? "현재 회원가입 서버의 지역 설정에 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+            : result.error?.message ??
             "회원가입에 실패했습니다. 입력 정보를 확인해 주세요.",
         );
         return;
@@ -209,12 +210,6 @@ function SignupPage() {
                   {fieldErrors.regionName}
                 </p>
               )}
-              {fieldErrors.regionId && (
-                <p className="signup-field-error" role="alert">
-                  {fieldErrors.regionId}
-                </p>
-              )}
-
               <div className="password-label-row">
                 <label htmlFor="signup-password">비밀번호</label>
                 <button

@@ -66,7 +66,7 @@ export const signup = async ({
       email: normalizedEmail,
       passwordHash,
       nickname,
-      regionId: regionId ?? null,
+      regionId: regionId?.trim() || null,
       regionName: regionName?.trim() || null,
     });
   } catch (error) {

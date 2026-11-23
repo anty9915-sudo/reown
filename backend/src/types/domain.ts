@@ -16,8 +16,8 @@ export interface AuthCredentials {
 
 export interface SignupInput extends AuthCredentials {
   nickname: string;
-  regionId?: string;
-  regionName?: string;
+  regionId?: string | null;
+  regionName?: string | null;
 }
 
 export interface ProductListQuery {

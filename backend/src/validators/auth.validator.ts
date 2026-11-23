@@ -73,18 +73,23 @@ export const validateSignup = (body: unknown): ValidationDetails => {
     details.nickname = '닉네임은 한글, 영문, 숫자로 2자 이상 20자 이하여야 합니다.';
   }
 
+  // 지역 ID는 선택 항목이다. 미선택 폼에서 전달한 null·빈 문자열도 허용한다.
+  // 사용자가 직접 적은 동네명은 regionName이며 정수 ID로 검증하지 않는다.
+  const regionId = typeof input.regionId === 'string'
+    ? input.regionId.trim()
+    : input.regionId;
   if (
-    input.regionId !== undefined &&
-    (typeof input.regionId !== 'string' ||
-      !/^\d{1,19}$/.test(input.regionId) ||
-      BigInt(input.regionId) < 1n ||
-      BigInt(input.regionId) > 9223372036854775807n)
+    regionId !== undefined && regionId !== null && regionId !== '' &&
+    (typeof regionId !== 'string' ||
+      !/^\d{1,19}$/.test(regionId) ||
+      BigInt(regionId) < 1n ||
+      BigInt(regionId) > 9223372036854775807n)
   ) {
     details.regionId = '동네 검색 결과에서 지역을 선택해 주세요.';
   }
 
   if (
-    input.regionName !== undefined &&
+    input.regionName !== undefined && input.regionName !== null &&
     (typeof input.regionName !== 'string' || input.regionName.trim().length > 100)
   ) {
     details.regionName = '동네명은 100자 이하여야 합니다.';
