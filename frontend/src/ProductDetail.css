@@ -364,6 +364,21 @@
   text-decoration: none;
 }
 
+.product-detail-not-found button {
+  margin-top: 16px;
+  padding: 11px 17px;
+  border: 0;
+  border-radius: 7px;
+  background: #3c7653;
+  color: #fff;
+  cursor: pointer;
+}
+
+.product-owner-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
   .app-shell main.product-detail-main {
     padding: 28px 24px 56px;

@@ -2,23 +2,24 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
 import { categories } from './data/categories'
-import { products } from './data/products'
 import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
 import RegionSelector from './components/RegionSelector'
 import { getSelectedRegion, saveSelectedRegion } from './utils/selectedRegion'
 import { useCart } from './hooks/cartContext'
-import { getAllProducts } from './lib/products'
+import { useProducts } from './hooks/useProducts'
+import ProductResults from './components/ProductResults'
 import './App.css'
 
 function MarketPage() {
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('전체')
   const [activeTab, setActiveTab] = useState('추천')
-  const [favorites, setFavorites] = useState<number[]>([])
+  const [favorites, setFavorites] = useState<string[]>([])
   const [selectedRegion, setSelectedRegion] = useState(getSelectedRegion)
   const { cart, toggleCart } = useCart()
-  const allProducts = getAllProducts(products)
+  const productList = useProducts()
+  const allProducts = productList.products
 
   const visibleProducts = useMemo(() => {
     const keyword = search.trim().toLowerCase()
@@ -37,9 +38,9 @@ function MarketPage() {
       return filtered.slice().sort((a, b) => b.likes - a.likes)
     }
     return filtered
-  }, [activeTab, search, selectedCategory])
+  }, [activeTab, search, selectedCategory, allProducts])
 
-  const toggleFavorite = (id: number) => {
+  const toggleFavorite = (id: string) => {
     setFavorites((current) =>
       current.includes(id)
         ? current.filter((favorite) => favorite !== id)
@@ -105,10 +106,11 @@ function MarketPage() {
               ))}
             </div>
             <span className="result-caption">
-              가까운 순으로 보여드려요 <span aria-hidden="true">⌖</span>
+              불러온 상품 기준으로 보여드려요 <span aria-hidden="true">⌖</span>
             </span>
           </div>
 
+          <ProductResults {...productList}>
           {visibleProducts.length > 0 ? (
             <div className="product-grid">
               {visibleProducts.map((product) => {
@@ -215,6 +217,7 @@ function MarketPage() {
               </button>
             </div>
           )}
+          </ProductResults>
         </section>
       </main>
 

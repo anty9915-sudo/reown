@@ -1,13 +1,21 @@
 import { createContext, useContext } from "react"
 import type { CartItem } from "../api/cart"
-import type { Product } from "../data/products"
+
+export type CartProduct = {
+  id: string | number
+  title: string
+  price: number
+  category: string
+  location: string
+  image: string
+}
 
 export type CartContextValue = {
   cart: CartItem[]
   loading: boolean
   error: string
   clearError: () => void
-  toggleCart: (product: Product) => Promise<void>
+  toggleCart: (product: CartProduct) => Promise<void>
   removeFromCart: (productId: string) => Promise<void>
 }
 

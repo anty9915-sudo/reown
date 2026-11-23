@@ -2,16 +2,11 @@ import { useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import SiteHeader from "./components/SiteHeader"
 import { ApiError, createChatRoom } from "./api/chats"
-import { products } from "./data/products"
+import { toProductCard } from "./api/products"
+import { useProduct } from "./hooks/useProducts"
 import { formatPrice } from "./utils/formatprice"
 import { imageUrl } from "./utils/imageUrl"
-import {
-  deleteLocalProduct,
-  getAllProducts,
-  updateLocalProduct,
-} from "./lib/products"
 import { getAccessToken, getAuthUser } from "./lib/auth"
-import { createLocalChatRoom } from "./lib/localChats"
 import "./ProductDetail.css"
 
 function ProductDetailPage() {
@@ -20,30 +15,22 @@ function ProductDetailPage() {
   const [search, setSearch] = useState("")
   const [starting, setStarting] = useState(false)
   const [chatError, setChatError] = useState("")
-  const [actionVersion, setActionVersion] = useState(0)
-  const product = getAllProducts(products).find(
-    (item) => item.id === Number(productId),
-  )
-  void actionVersion
+  const { product: detail, loading, error, notFound, retry } = useProduct(productId ?? "")
+  const product = detail
+    ? {
+        ...toProductCard({
+          ...detail,
+          thumbnailUrl: [...detail.images].sort((a, b) => a.sortOrder - b.sortOrder)[0]?.url ?? null,
+        }),
+        description: detail.description,
+        sellerName: detail.seller.nickname,
+      }
+    : null
   const currentUser = getAccessToken() ? getAuthUser() : null
   const isOwner =
-    !!product &&
+    !!detail &&
     !!currentUser &&
-    (product.sellerId === Number(currentUser.id) ||
-      product.sellerName === currentUser.nickname)
-  const toggleSoldOut = () => {
-    if (!product || !isOwner) return
-    updateLocalProduct(product.id, { soldOut: !product.soldOut })
-    setActionVersion((version) => version + 1)
-  }
-
-  const deleteProduct = () => {
-    if (!product || !isOwner) return
-    if (!window.confirm("이 상품을 삭제하시겠습니까?")) return
-    deleteLocalProduct(product.id)
-    setActionVersion((version) => version + 1)
-    navigate("/market", { replace: true })
-  }
+    detail.seller.id === currentUser.id
 
   const startChat = async () => {
     if (!product || starting) return
@@ -54,11 +41,6 @@ function ProductDetailPage() {
     setStarting(true)
     setChatError("")
     try {
-      if (product.sellerId || product.sellerName) {
-        const roomId = createLocalChatRoom(product, currentUser)
-        navigate(`/chats/${roomId}`)
-        return
-      }
       const { roomId } = await createChatRoom(product.id)
       navigate(`/chats/${roomId}`)
     } catch (e) {
@@ -75,7 +57,13 @@ function ProductDetailPage() {
   return (
     <div className="app-shell">
       <SiteHeader search={search} onSearchChange={setSearch} />
-      {product ? (
+      {loading ? (
+        <main className="product-detail-main">
+          <section className="product-detail-not-found" role="status">
+            <h1>상품을 불러오는 중이에요...</h1>
+          </section>
+        </main>
+      ) : product ? (
         <main className="product-detail-main">
           <Link className="product-detail-back" to="/market">
             <span aria-hidden="true">←</span> 상품 목록으로
@@ -93,7 +81,7 @@ function ProductDetailPage() {
                 />
               )}
               {product.soldOut && (
-                <span className="product-detail-sold-badge">품절</span>
+                <span className="product-detail-sold-badge">거래완료</span>
               )}
               {product.badge && (
                 <span className="product-badge">{product.badge}</span>
@@ -109,6 +97,7 @@ function ProductDetailPage() {
               <h1>{product.title}</h1>
               <div className="product-detail-meta">
                 <span>{product.time}</span>
+                <span>조회 {detail?.viewCount ?? 0}회</span>
                 <span aria-label={`관심 ${product.likes}개`}>
                   <span aria-hidden="true">♡</span> 관심 {product.likes}
                 </span>
@@ -147,17 +136,17 @@ function ProductDetailPage() {
                 <div className="product-owner-actions">
                   <button
                     className={`product-soldout-button${product.soldOut ? " is-soldout" : ""}`}
-                    onClick={toggleSoldOut}
+                    disabled
                     type="button"
                   >
-                    {product.soldOut ? "판매중으로 변경" : "품절 처리"}
+                    거래 상태 변경 준비 중
                   </button>
                   <button
                     className="product-delete-button"
-                    onClick={deleteProduct}
+                    disabled
                     type="button"
                   >
-                    상품 삭제
+                    상품 삭제 연결 준비 중
                   </button>
                 </div>
               ) : (
@@ -197,10 +186,11 @@ function ProductDetailPage() {
         </main>
       ) : (
         <main className="product-detail-main">
-          <section className="product-detail-not-found">
+          <section className="product-detail-not-found" role={notFound ? "status" : "alert"}>
             <span aria-hidden="true">⌕</span>
-            <h1>상품을 찾을 수 없어요</h1>
-            <p>상품이 삭제되었거나 주소가 올바르지 않습니다.</p>
+            <h1>{notFound ? "상품을 찾을 수 없어요" : "상품을 불러오지 못했어요"}</h1>
+            <p>{notFound ? "상품이 삭제되었거나 주소가 올바르지 않습니다." : error}</p>
+            {!notFound && <button type="button" onClick={retry}>다시 시도</button>}
             <Link to="/market">상품 둘러보기</Link>
           </section>
         </main>

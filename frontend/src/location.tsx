@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
 import { categories } from './data/categories'
-import { products } from './data/products'
 import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
 import { useCart } from './hooks/cartContext'
+import { useProducts } from './hooks/useProducts'
+import ProductResults from './components/ProductResults'
 import './App.css'
 
 function LocationPage() {
@@ -13,10 +14,12 @@ function LocationPage() {
   const [selectedRegion, setSelectedRegion] = useState('전체 지역')
   const [selectedCategory, setSelectedCategory] = useState('전체')
   const { cart, toggleCart } = useCart()
+  const productList = useProducts()
+  const products = productList.products
 
   const regions = useMemo(
     () => [...new Set(products.map((product) => product.location))],
-    [],
+    [products],
   )
 
   const visibleProducts = useMemo(() => {
@@ -35,7 +38,7 @@ function LocationPage() {
 
       return matchesRegion && matchesCategory && matchesSearch
     })
-  }, [search, selectedCategory, selectedRegion])
+  }, [search, selectedCategory, selectedRegion, products])
 
   return (
     <div className="app-shell">
@@ -86,6 +89,7 @@ function LocationPage() {
             ))}
           </div>
 
+          <ProductResults {...productList}>
           {visibleProducts.length > 0 ? (
             <div className="product-grid location-product-grid">
               {visibleProducts.map((product) => (
@@ -167,6 +171,7 @@ function LocationPage() {
               </button>
             </div>
           )}
+          </ProductResults>
         </section>
       </main>
 

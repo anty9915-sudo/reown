@@ -7,9 +7,8 @@ import {
   type CartItem,
 } from "../api/cart"
 import { ApiError, getToken } from "../api/client"
-import type { Product } from "../data/products"
 import { imageUrl } from "../utils/imageUrl"
-import { CartContext } from "./cartContext"
+import { CartContext, type CartProduct } from "./cartContext"
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([])
@@ -54,7 +53,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     return false
   }
 
-  const toggleCart = async (product: Product) => {
+  const toggleCart = async (product: CartProduct) => {
     if (!requireLogin()) return
 
     const id = String(product.id)

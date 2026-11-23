@@ -23,7 +23,7 @@ export const fetchChatRooms = async () => {
   return result.items
 }
 
-export const createChatRoom = (productId: number) =>
+export const createChatRoom = (productId: string | number) =>
   apiRequest<{ roomId: string }>("/api/v1/chats", {
     method: "POST",
     body: JSON.stringify({ productId: String(productId) }),

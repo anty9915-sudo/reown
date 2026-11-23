@@ -1,23 +1,24 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import "./App.css";
-import { products } from "./data/products";
 import { imageUrl } from "./utils/imageUrl";
 import SiteHeader from "./components/SiteHeader";
 import { formatPrice } from "./utils/formatprice";
 import { useCart } from "./hooks/cartContext";
-import { getAllProducts } from "./lib/products";
+import { useProducts } from "./hooks/useProducts";
+import ProductResults from "./components/ProductResults";
 const allRegionsLabel = "전체지역";
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState("전체");
   const [search, setSearch] = useState("");
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("추천");
   const [selectedRegion, setSelectedRegion] = useState(allRegionsLabel);
   const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false);
   const { cart, toggleCart } = useCart();
-  const allProducts = getAllProducts(products);
+  const productList = useProducts();
+  const allProducts = productList.products;
   const regions = useMemo(
     () => [...new Set(allProducts.map((product) => product.location))],
     [allProducts],
@@ -50,9 +51,9 @@ function App() {
       return filtered.slice().sort((a, b) => b.likes - a.likes);
     }
     return filtered;
-  }, [activeTab, search, selectedCategory, selectedRegion]);
+  }, [activeTab, search, selectedCategory, selectedRegion, allProducts]);
 
-  const toggleFavorite = (id: number) => {
+  const toggleFavorite = (id: string) => {
     setFavorites((current) =>
       current.includes(id)
         ? current.filter((favorite) => favorite !== id)
@@ -102,10 +103,14 @@ function App() {
             </div>
             {featuredProduct && (
               <div className="hero-product-card">
-                <img
-                  src={imageUrl(featuredProduct.image)}
-                  alt={featuredProduct.title}
-                />
+                {featuredProduct.image ? (
+                  <img
+                    src={imageUrl(featuredProduct.image)}
+                    alt={featuredProduct.title}
+                  />
+                ) : (
+                  <div className="product-image-placeholder" role="img" aria-label="상품 사진 없음" />
+                )}
                 <div className="hero-product-info">
                   <div>
                     <span>오늘의 발견 · {featuredProduct.location}</span>
@@ -271,9 +276,10 @@ function App() {
               ))}
             </div>
             <span className="result-caption">
-              가까운 순으로 보여드려요 <span aria-hidden="true">⌖</span>
+              불러온 상품 기준으로 보여드려요 <span aria-hidden="true">⌖</span>
             </span>
           </div>
+          <ProductResults {...productList}>
           {visibleProducts.length > 0 ? (
             <div className="product-grid">
               {visibleProducts.map((product) => (
@@ -392,6 +398,7 @@ function App() {
               </button>
             </div>
           )}
+          </ProductResults>
           <a className="more-button" href="/market">
             우리 동네 매물 더 보기 <span aria-hidden="true">↓</span>
           </a>
