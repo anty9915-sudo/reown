@@ -8,6 +8,7 @@ import {
   saveSelectedRegion,
 } from "../utils/selectedRegion"
 import { useProducts } from "./useProducts"
+import { useCategories } from "./useCategories"
 
 function useDebouncedValue(value: string) {
   const [debounced, setDebounced] = useState(value)
@@ -20,7 +21,8 @@ function useDebouncedValue(value: string) {
 
 export function useProductSearch() {
   const [search, setSearch] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("전체")
+  const [selectedCategory, setSelectedCategory] = useState("")
+  const categoryList = useCategories()
   const [selectedRegion, setSelectedRegion] = useState(() => ({
     id: getSelectedRegionId(),
     name: getSelectedRegionId() ? getSelectedRegion() : "전체 지역",
@@ -35,7 +37,7 @@ export function useProductSearch() {
 
   const productList = useProducts({
     keyword: keyword || undefined,
-    categoryName: selectedCategory === "전체" ? undefined : selectedCategory,
+    categoryId: selectedCategory || undefined,
     regionId: selectedRegion.id,
     status: status || undefined,
     minPrice: minimum || undefined,
@@ -54,7 +56,7 @@ export function useProductSearch() {
   }
   const resetFilters = () => {
     setSearch("")
-    setSelectedCategory("전체")
+    setSelectedCategory("")
     resetRegion()
     setStatus("")
     setSort("latest")
@@ -63,7 +65,7 @@ export function useProductSearch() {
   }
 
   return {
-    productList, search, setSearch, selectedCategory, setSelectedCategory,
+    productList, categoryList, search, setSearch, selectedCategory, setSelectedCategory,
     selectedRegion, selectRegion, resetRegion, status, setStatus,
     sort, setSort, minPrice, setMinPrice, maxPrice, setMaxPrice, resetFilters,
   }

@@ -1,0 +1,29 @@
+.category-feedback {
+  margin: 12px 0;
+  color: #647267;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.category-feedback-error {
+  color: #945132;
+}
+
+.category-feedback p {
+  margin: 0 0 8px;
+}
+
+.category-feedback button {
+  padding: 8px 12px;
+  border: 1px solid #dce5dc;
+  border-radius: 7px;
+  background: #fff;
+  color: #344238;
+  font: inherit;
+  cursor: pointer;
+}
+
+.category-item > span:last-child {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}

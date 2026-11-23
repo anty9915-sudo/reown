@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { categories } from "./data/categories";
+import { useCategories } from "./hooks/useCategories";
+import { CategoryFeedback } from "./components/CategoryFilters";
 import { getSelectedRegion } from "./utils/selectedRegion";
 import { getAccessToken, getAuthUser } from "./lib/auth";
 import { addLocalProduct } from "./lib/products";
@@ -15,9 +16,13 @@ function SellPage() {
   const [price, setPrice] = useState("");
   const [location, setLocation] = useState(getSelectedRegion);
   const [notice, setNotice] = useState("");
+  const categoryList = useCategories();
+  const selectedCategory = categoryList.categories.find((item) => item.id === category);
   const canSubmit =
     title.trim().length > 0 &&
-    category !== "" &&
+    !!selectedCategory &&
+    !categoryList.loading &&
+    !categoryList.error &&
     price !== "" &&
     location.trim().length > 0 &&
     Number.isFinite(Number(price)) &&
@@ -44,7 +49,8 @@ function SellPage() {
     const form = event.currentTarget;
     const data = new FormData(form);
     const title = String(data.get("title") ?? "").trim();
-    const category = String(data.get("category") ?? "");
+    const categoryId = String(data.get("category") ?? "");
+    const category = categoryList.categories.find((item) => item.id === categoryId)?.name ?? "";
     const price = Number(data.get("price"));
     const description = String(data.get("description") ?? "").trim();
 
@@ -180,7 +186,9 @@ function SellPage() {
                   카테고리 <i>필수</i>
                 </span>
                 <select
+                  aria-label="카테고리 선택"
                   name="category"
+                  disabled={categoryList.loading || !!categoryList.error || categoryList.categories.length === 0}
                   onChange={(event) => {
                     setCategory(event.target.value);
                     setNotice("");
@@ -189,17 +197,14 @@ function SellPage() {
                   value={category}
                 >
                   <option disabled value="">
-                    카테고리를 선택해 주세요
+                    {categoryList.loading ? "카테고리를 불러오는 중..." : "카테고리를 선택해 주세요"}
                   </option>
-                  {categories
-                    .filter((category) => category !== "전체")
-                    .map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
+                  {categoryList.categories.map((item) => (
+                    <option key={item.id} value={item.id}>{item.name}</option>
+                  ))}
                 </select>
               </label>
+              <CategoryFeedback {...categoryList} />
 
               <label className="sell-field">
                 <span>

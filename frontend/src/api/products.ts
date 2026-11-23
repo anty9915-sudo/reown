@@ -6,7 +6,6 @@ export type ProductSort = "latest" | "oldest" | "priceAsc" | "priceDesc" | "view
 export interface ProductListQuery {
   keyword?: string
   categoryId?: string
-  categoryName?: string
   regionId?: string
   status?: ProductStatus
   minPrice?: string
@@ -79,25 +78,12 @@ export const fetchProducts = async (
     throw new ApiError("최대 가격은 최소 가격 이상이어야 해요.", 400)
   }
 
-  let categoryId = filters.categoryId
-  // 현재 화면의 카테고리 이름을 필터용 실제 ID로만 변환한다.
-  // 카테고리 목록 UI를 API로 교체하는 작업은 다음 단계에서 진행한다.
-  if (!categoryId && filters.categoryName) {
-    const result = await apiRequest<{ items: { id: string; name: string }[] }>(
-      "/api/v1/categories", { signal },
-    )
-    categoryId = result.items.find((category) => category.name === filters.categoryName)?.id
-    if (!categoryId) {
-      return { items: [], pageInfo: { nextCursor: null, hasNext: false } }
-    }
-  }
-
   const query = new URLSearchParams({
     limit: String(filters.limit ?? 20),
     sort: filters.sort ?? "latest",
   })
   if (keyword) query.set("keyword", keyword)
-  if (categoryId) query.set("categoryId", categoryId)
+  if (filters.categoryId) query.set("categoryId", filters.categoryId)
   if (filters.regionId) query.set("regionId", filters.regionId)
   if (filters.status) query.set("status", filters.status)
   if (minPrice) query.set("minPrice", minPrice)

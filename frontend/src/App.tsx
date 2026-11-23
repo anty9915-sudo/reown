@@ -9,12 +9,13 @@ import { useProductSearch } from "./hooks/useProductSearch";
 import ProductResults from "./components/ProductResults";
 import ProductFilters from "./components/ProductFilters";
 import RegionSelector from "./components/RegionSelector";
+import CategoryFilters from "./components/CategoryFilters";
 
 function App() {
   const searchState = useProductSearch();
   const {
     search, setSearch, selectedCategory, setSelectedCategory,
-    selectedRegion, selectRegion, resetRegion, resetFilters, productList,
+    selectedRegion, selectRegion, resetRegion, resetFilters, productList, categoryList,
   } = searchState;
   const [favorites, setFavorites] = useState<string[]>([]);
   const { cart, toggleCart } = useCart();
@@ -122,56 +123,8 @@ function App() {
               전체 카테고리 <span aria-hidden="true">→</span>
             </a>
           </div>
-          <div className="category-list">
-            <button
-              className={`category-item ${selectedCategory === "전체" ? "selected" : ""}`}
-              onClick={() => setSelectedCategory("전체")}
-              type="button"
-            >
-              <span className="category-icon all-icon">✳</span>
-              <span>전체보기</span>
-            </button>
-            <button
-              className={`category-item ${selectedCategory === "디지털기기" ? "selected" : ""}`}
-              onClick={() => setSelectedCategory("디지털기기")}
-              type="button"
-            >
-              <span className="category-icon">⌁</span>
-              <span>디지털기기</span>
-            </button>
-            <button
-              className={`category-item ${selectedCategory === "가구·인테리어" ? "selected" : ""}`}
-              onClick={() => setSelectedCategory("가구·인테리어")}
-              type="button"
-            >
-              <span className="category-icon">⌂</span>
-              <span>가구·인테리어</span>
-            </button>
-            <button
-              className={`category-item ${selectedCategory === "패션의류" ? "selected" : ""}`}
-              onClick={() => setSelectedCategory("패션의류")}
-              type="button"
-            >
-              <span className="category-icon">♧</span>
-              <span>패션의류</span>
-            </button>
-            <button
-              className={`category-item ${selectedCategory === "생활가전" ? "selected" : ""}`}
-              onClick={() => setSelectedCategory("생활가전")}
-              type="button"
-            >
-              <span className="category-icon">◉</span>
-              <span>생활가전</span>
-            </button>
-            <button
-              className={`category-item ${selectedCategory === "취미·게임" ? "selected" : ""}`}
-              onClick={() => setSelectedCategory("취미·게임")}
-              type="button"
-            >
-              <span className="category-icon">♬</span>
-              <span>취미·게임</span>
-            </button>
-          </div>
+          <CategoryFilters {...categoryList} selectedId={selectedCategory}
+            onSelect={setSelectedCategory} variant="tiles" />
         </section>
 
         <section className="market-section" id="market">

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
-import { categories } from './data/categories'
 import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
 import RegionSelector from './components/RegionSelector'
@@ -9,13 +8,14 @@ import { useCart } from './hooks/cartContext'
 import { useProductSearch } from './hooks/useProductSearch'
 import ProductResults from './components/ProductResults'
 import ProductFilters from './components/ProductFilters'
+import CategoryFilters from './components/CategoryFilters'
 import './App.css'
 
 function MarketPage() {
   const searchState = useProductSearch()
   const {
     search, setSearch, selectedCategory, setSelectedCategory,
-    selectedRegion, selectRegion, resetRegion, resetFilters, productList,
+    selectedRegion, selectRegion, resetRegion, resetFilters, productList, categoryList,
   } = searchState
   const [favorites, setFavorites] = useState<string[]>([])
   const { cart, toggleCart } = useCart()
@@ -56,19 +56,8 @@ function MarketPage() {
             />
           </div>
 
-          <div className="market-page-categories" aria-label="카테고리">
-            {categories.map((category) => (
-              <button
-                aria-pressed={selectedCategory === category}
-                className={`market-category${selectedCategory === category ? ' selected' : ''}`}
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                type="button"
-              >
-                {category}
-              </button>
-            ))}
-          </div>
+          <CategoryFilters {...categoryList} selectedId={selectedCategory}
+            onSelect={setSelectedCategory} />
 
           <ProductFilters {...searchState} />
 
