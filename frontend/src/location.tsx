@@ -1,44 +1,23 @@
-import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
 import { categories } from './data/categories'
 import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
 import { useCart } from './hooks/cartContext'
-import { useProducts } from './hooks/useProducts'
+import { useProductSearch } from './hooks/useProductSearch'
 import ProductResults from './components/ProductResults'
+import ProductFilters from './components/ProductFilters'
+import RegionSelector from './components/RegionSelector'
 import './App.css'
 
 function LocationPage() {
-  const [search, setSearch] = useState('')
-  const [selectedRegion, setSelectedRegion] = useState('전체 지역')
-  const [selectedCategory, setSelectedCategory] = useState('전체')
+  const searchState = useProductSearch()
+  const {
+    search, setSearch, selectedCategory, setSelectedCategory,
+    selectedRegion, selectRegion, resetRegion, resetFilters, productList,
+  } = searchState
   const { cart, toggleCart } = useCart()
-  const productList = useProducts()
-  const products = productList.products
-
-  const regions = useMemo(
-    () => [...new Set(products.map((product) => product.location))],
-    [products],
-  )
-
-  const visibleProducts = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
-
-    return products.filter((product) => {
-      const matchesRegion =
-        selectedRegion === '전체 지역' || product.location === selectedRegion
-      const matchesCategory =
-        selectedCategory === '전체' || product.category === selectedCategory
-      const matchesSearch =
-        !keyword ||
-        `${product.title} ${product.category} ${product.location}`
-          .toLowerCase()
-          .includes(keyword)
-
-      return matchesRegion && matchesCategory && matchesSearch
-    })
-  }, [search, selectedCategory, selectedRegion, products])
+  const visibleProducts = productList.products
 
   return (
     <div className="app-shell">
@@ -61,19 +40,12 @@ function LocationPage() {
             </div>
           </div>
 
-          <div className="market-page-categories" aria-label="지역 카테고리">
-            {['전체 지역', ...regions].map((region) => (
-              <button
-                aria-pressed={selectedRegion === region}
-                className={`market-category${selectedRegion === region ? ' selected' : ''}`}
-                key={region}
-                onClick={() => setSelectedRegion(region)}
-                type="button"
-              >
-                {region}
-              </button>
-            ))}
-          </div>
+          <RegionSelector
+            selectedRegion={selectedRegion.name}
+            onSelect={selectRegion}
+            onReset={resetRegion}
+            allowFallback={false}
+          />
 
           <div className="market-page-categories" aria-label="상품 카테고리">
             {categories.map((category) => (
@@ -89,6 +61,7 @@ function LocationPage() {
             ))}
           </div>
 
+          <ProductFilters {...searchState} />
           <ProductResults {...productList}>
           {visibleProducts.length > 0 ? (
             <div className="product-grid location-product-grid">
@@ -160,11 +133,7 @@ function LocationPage() {
               <strong>조건에 맞는 상품이 없어요</strong>
               <p>지역이나 카테고리를 바꿔 다시 찾아보세요.</p>
               <button
-                onClick={() => {
-                  setSearch('')
-                  setSelectedRegion('전체 지역')
-                  setSelectedCategory('전체')
-                }}
+                onClick={resetFilters}
                 type="button"
               >
                 전체 상품 보기

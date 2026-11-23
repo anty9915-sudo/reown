@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { apiRequest } from '../api/client'
 import './RegionSelector.css'
 
 export type Region = {
@@ -9,18 +10,10 @@ export type Region = {
   localOnly?: boolean
 }
 
-type RegionsResponse = {
-  data?: {
-    items?: Region[]
-  }
-  error?: {
-    message?: string
-  }
-}
-
 type RegionSelectorProps = {
   selectedRegion: string
   onReset?: () => void
+  allowFallback?: boolean
   // 두 번째 인자로 지역 객체(id 포함)를 넘긴다. 이름만 쓰는 기존 화면은 첫 번째 인자만 받으면 된다.
   onSelect: (regionName: string, region: Region) => void
 }
@@ -59,6 +52,7 @@ function RegionSelector({
   selectedRegion,
   onReset,
   onSelect,
+  allowFallback = true,
 }: RegionSelectorProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [keyword, setKeyword] = useState('')
@@ -78,24 +72,21 @@ function RegionSelector({
 
       try {
         const params = new URLSearchParams({ keyword: query, limit: '20' })
-        const response = await fetch(`/api/v1/regions?${params}`, {
-          signal: controller.signal,
-        })
-        const result = (await response.json()) as RegionsResponse
-
-        if (!response.ok) {
-          throw new Error(result.error?.message ?? '지역을 검색하지 못했습니다.')
-        }
-
-        const apiRegions = result.data?.items ?? []
-        setRegions(apiRegions.length > 0 ? apiRegions : findFallbackRegions(query))
+        const result = await apiRequest<{ items: Region[] }>(
+          `/api/v1/regions?${params}`, { signal: controller.signal },
+        )
+        const apiRegions = result.items.filter((region) => /^[1-9]\d*$/.test(region.id))
+        setRegions(apiRegions.length > 0 ? apiRegions : allowFallback ? findFallbackRegions(query) : [])
       } catch (requestError) {
         if (requestError instanceof Error && requestError.name === 'AbortError') {
           return
         }
-        setRegions(findFallbackRegions(query))
+        if (controller.signal.aborted) return
+        setRegions(allowFallback ? findFallbackRegions(query) : [])
         setError(
-          '지역 서버에 연결할 수 없어 예시 동네를 표시합니다. 예시 동네는 가입 정보에 저장되지 않습니다.',
+          allowFallback
+            ? '지역 서버에 연결할 수 없어 예시 동네를 표시합니다. 예시 동네는 가입 정보에 저장되지 않습니다.'
+            : '지역을 검색하지 못했습니다. 검색어를 변경하거나 잠시 후 다시 시도해 주세요.',
         )
       } finally {
         if (!controller.signal.aborted) setIsLoading(false)
@@ -106,7 +97,7 @@ function RegionSelector({
       window.clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [isOpen, keyword])
+  }, [isOpen, keyword, allowFallback])
 
   const selectRegion = (region: Region) => {
     onSelect(getRegionName(region), region)

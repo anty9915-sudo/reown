@@ -1,0 +1,45 @@
+.product-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.product-filters label {
+  display: flex;
+  flex: 1 1 130px;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+  color: #526358;
+  font-size: 12px;
+}
+
+.product-filters select,
+.product-filters input,
+.product-filters button {
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid #dce5dc;
+  border-radius: 7px;
+  background: #fff;
+  color: #344238;
+  font: inherit;
+}
+
+.product-filters select,
+.product-filters input {
+  width: 100%;
+}
+
+.product-filters button {
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.product-filters :is(input, select, button):focus-visible {
+  outline: 2px solid #3c7653;
+  outline-offset: 2px;
+}

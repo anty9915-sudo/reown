@@ -1,6 +1,19 @@
 import { apiRequest, ApiError } from "./client"
 
 export type ProductStatus = "ON_SALE" | "RESERVED" | "SOLD"
+export type ProductSort = "latest" | "oldest" | "priceAsc" | "priceDesc" | "views"
+
+export interface ProductListQuery {
+  keyword?: string
+  categoryId?: string
+  categoryName?: string
+  regionId?: string
+  status?: ProductStatus
+  minPrice?: string
+  maxPrice?: string
+  sort?: ProductSort
+  limit?: number
+}
 
 export interface ProductListItem {
   id: string
@@ -46,11 +59,49 @@ export interface ProductPage {
 }
 
 // DB의 bigint ID는 숫자로 바꾸지 않고 문자열 그대로 유지한다.
-export const fetchProducts = (
+export const fetchProducts = async (
+  filters: ProductListQuery = {},
   cursor?: string,
   signal?: AbortSignal,
 ): Promise<ProductPage> => {
-  const query = new URLSearchParams({ limit: "20" })
+  const keyword = filters.keyword?.trim()
+  if (keyword && keyword.length > 100) {
+    throw new ApiError("검색어는 100자 이하로 입력해 주세요.", 400)
+  }
+  const minPrice = filters.minPrice?.trim()
+  const maxPrice = filters.maxPrice?.trim()
+  for (const price of [minPrice, maxPrice]) {
+    if (price && (!/^\d+$/.test(price) || Number(price) < 1 || Number(price) > 1_000_000_000)) {
+      throw new ApiError("가격은 1원 이상 10억원 이하의 정수로 입력해 주세요.", 400)
+    }
+  }
+  if (minPrice && maxPrice && Number(minPrice) > Number(maxPrice)) {
+    throw new ApiError("최대 가격은 최소 가격 이상이어야 해요.", 400)
+  }
+
+  let categoryId = filters.categoryId
+  // 현재 화면의 카테고리 이름을 필터용 실제 ID로만 변환한다.
+  // 카테고리 목록 UI를 API로 교체하는 작업은 다음 단계에서 진행한다.
+  if (!categoryId && filters.categoryName) {
+    const result = await apiRequest<{ items: { id: string; name: string }[] }>(
+      "/api/v1/categories", { signal },
+    )
+    categoryId = result.items.find((category) => category.name === filters.categoryName)?.id
+    if (!categoryId) {
+      return { items: [], pageInfo: { nextCursor: null, hasNext: false } }
+    }
+  }
+
+  const query = new URLSearchParams({
+    limit: String(filters.limit ?? 20),
+    sort: filters.sort ?? "latest",
+  })
+  if (keyword) query.set("keyword", keyword)
+  if (categoryId) query.set("categoryId", categoryId)
+  if (filters.regionId) query.set("regionId", filters.regionId)
+  if (filters.status) query.set("status", filters.status)
+  if (minPrice) query.set("minPrice", minPrice)
+  if (maxPrice) query.set("maxPrice", maxPrice)
   if (cursor) query.set("cursor", cursor)
   return apiRequest<ProductPage>(`/api/v1/products?${query}`, { signal })
 }

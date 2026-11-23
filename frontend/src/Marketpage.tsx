@@ -1,44 +1,25 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SiteHeader from './components/SiteHeader'
 import { categories } from './data/categories'
 import { formatPrice } from './utils/formatprice'
 import { imageUrl } from './utils/imageUrl'
 import RegionSelector from './components/RegionSelector'
-import { getSelectedRegion, saveSelectedRegion } from './utils/selectedRegion'
 import { useCart } from './hooks/cartContext'
-import { useProducts } from './hooks/useProducts'
+import { useProductSearch } from './hooks/useProductSearch'
 import ProductResults from './components/ProductResults'
+import ProductFilters from './components/ProductFilters'
 import './App.css'
 
 function MarketPage() {
-  const [search, setSearch] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('전체')
-  const [activeTab, setActiveTab] = useState('추천')
+  const searchState = useProductSearch()
+  const {
+    search, setSearch, selectedCategory, setSelectedCategory,
+    selectedRegion, selectRegion, resetRegion, resetFilters, productList,
+  } = searchState
   const [favorites, setFavorites] = useState<string[]>([])
-  const [selectedRegion, setSelectedRegion] = useState(getSelectedRegion)
   const { cart, toggleCart } = useCart()
-  const productList = useProducts()
-  const allProducts = productList.products
-
-  const visibleProducts = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
-    const filtered = allProducts.filter((product) => {
-      const matchesCategory =
-        selectedCategory === '전체' || product.category === selectedCategory
-      const matchesSearch =
-        !keyword ||
-        `${product.title} ${product.category} ${product.location}`
-          .toLowerCase()
-          .includes(keyword)
-      return matchesCategory && matchesSearch
-    })
-
-    if (activeTab === '인기순') {
-      return filtered.slice().sort((a, b) => b.likes - a.likes)
-    }
-    return filtered
-  }, [activeTab, search, selectedCategory, allProducts])
+  const visibleProducts = productList.products
 
   const toggleFavorite = (id: string) => {
     setFavorites((current) =>
@@ -68,11 +49,10 @@ function MarketPage() {
               </h2>
             </div>
             <RegionSelector
-              selectedRegion={selectedRegion}
-              onSelect={(region) => {
-                saveSelectedRegion(region)
-                setSelectedRegion(region)
-              }}
+              selectedRegion={selectedRegion.name}
+              onSelect={selectRegion}
+              onReset={resetRegion}
+              allowFallback={false}
             />
           </div>
 
@@ -90,25 +70,7 @@ function MarketPage() {
             ))}
           </div>
 
-          <div className="market-toolbar">
-            <div className="market-tabs" role="tablist" aria-label="매물 정렬">
-              {['추천', '최신순', '인기순'].map((tab) => (
-                <button
-                  aria-selected={activeTab === tab}
-                  className={activeTab === tab ? 'tab-active' : ''}
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  role="tab"
-                  type="button"
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-            <span className="result-caption">
-              불러온 상품 기준으로 보여드려요 <span aria-hidden="true">⌖</span>
-            </span>
-          </div>
+          <ProductFilters {...searchState} />
 
           <ProductResults {...productList}>
           {visibleProducts.length > 0 ? (
@@ -207,10 +169,7 @@ function MarketPage() {
               <strong>찾으시는 매물이 없어요</strong>
               <p>검색어나 카테고리를 바꿔 다시 찾아보세요.</p>
               <button
-                onClick={() => {
-                  setSearch('')
-                  setSelectedCategory('전체')
-                }}
+                onClick={resetFilters}
                 type="button"
               >
                 전체 매물 보기

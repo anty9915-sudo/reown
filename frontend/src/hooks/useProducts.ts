@@ -6,9 +6,11 @@ import {
   toProductCard,
   type ProductCard,
   type ProductDetail,
+  type ProductListQuery,
 } from "../api/products"
 
 interface ListState {
+  key: string
   products: ProductCard[]
   cursor: string | null
   hasNext: boolean
@@ -18,6 +20,7 @@ interface ListState {
 }
 
 const initialListState: ListState = {
+  key: "",
   products: [],
   cursor: null,
   hasNext: false,
@@ -29,17 +32,22 @@ const initialListState: ListState = {
 const errorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "상품을 불러오지 못했어요."
 
-export function useProducts() {
+export function useProducts(filters: ProductListQuery = {}) {
   const [state, setState] = useState<ListState>(initialListState)
   const [version, setVersion] = useState(0)
   const moreRequest = useRef<AbortController | null>(null)
+  const filtersKey = JSON.stringify(filters)
+  const requestKey = `${version}:${filtersKey}`
+  // 검색 조건이 바뀌면 이전 결과를 숨기고, 다른 조건의 커서를 재사용하지 않는다.
+  const currentState = state.key === requestKey ? state : initialListState
 
   useEffect(() => {
     const controller = new AbortController()
-    fetchProducts(undefined, controller.signal)
+    fetchProducts(JSON.parse(filtersKey) as ProductListQuery, undefined, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return
         setState({
+          key: requestKey,
           products: result.items.map(toProductCard),
           cursor: result.pageInfo.nextCursor,
           hasNext: result.pageInfo.hasNext,
@@ -50,7 +58,7 @@ export function useProducts() {
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return
-        setState({ ...initialListState, loading: false, error: errorMessage(error) })
+        setState({ ...initialListState, key: requestKey, loading: false, error: errorMessage(error) })
       })
 
     return () => {
@@ -58,7 +66,7 @@ export function useProducts() {
       moreRequest.current?.abort()
       moreRequest.current = null
     }
-  }, [version])
+  }, [filtersKey, requestKey])
 
   const retry = useCallback(() => {
     moreRequest.current?.abort()
@@ -68,14 +76,19 @@ export function useProducts() {
   }, [])
 
   const loadMore = async () => {
-    if (state.loading || !state.hasNext || !state.cursor || moreRequest.current) return
+    if (currentState.loading || !currentState.hasNext || !currentState.cursor || moreRequest.current) return
     const controller = new AbortController()
     moreRequest.current = controller
     setState((current) => ({ ...current, loadingMore: true, error: "" }))
     try {
-      const result = await fetchProducts(state.cursor, controller.signal)
+      const result = await fetchProducts(
+        JSON.parse(filtersKey) as ProductListQuery,
+        currentState.cursor,
+        controller.signal,
+      )
       if (controller.signal.aborted) return
       setState((current) => {
+        if (current.key !== requestKey) return current
         const knownIds = new Set(current.products.map((product) => product.id))
         return {
           ...current,
@@ -91,14 +104,25 @@ export function useProducts() {
       })
     } catch (error) {
       if (!controller.signal.aborted) {
-        setState((current) => ({ ...current, loadingMore: false, error: errorMessage(error) }))
+        setState((current) => current.key === requestKey
+          ? { ...current, loadingMore: false, error: errorMessage(error) }
+          : current)
       }
     } finally {
       if (moreRequest.current === controller) moreRequest.current = null
     }
   }
 
-  return { ...state, retry, loadMore }
+  return {
+    products: currentState.products,
+    cursor: currentState.cursor,
+    hasNext: currentState.hasNext,
+    loading: currentState.loading,
+    loadingMore: currentState.loadingMore,
+    error: currentState.error,
+    retry,
+    loadMore,
+  }
 }
 
 interface DetailState {
