@@ -1,63 +1,64 @@
-import { useMemo, useState } from "react"
-import { Link } from "react-router-dom"
-import "./App.css"
-import { products } from "./data/products"
-import { imageUrl } from "./utils/imageUrl"
-import SiteHeader from "./components/SiteHeader"
-import { formatPrice } from "./utils/formatprice"
-import { useCart } from "./hooks/cartContext"
-import { getAllProducts } from "./lib/products"
-const allRegionsLabel = "전체지역"
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import "./App.css";
+import { products } from "./data/products";
+import { imageUrl } from "./utils/imageUrl";
+import SiteHeader from "./components/SiteHeader";
+import { formatPrice } from "./utils/formatprice";
+import { useCart } from "./hooks/cartContext";
+import { getAllProducts } from "./lib/products";
+const allRegionsLabel = "전체지역";
 
 function App() {
-  const [selectedCategory, setSelectedCategory] = useState("전체")
-  const [search, setSearch] = useState("")
-  const [favorites, setFavorites] = useState<number[]>([])
-  const [activeTab, setActiveTab] = useState("추천")
-  const [selectedRegion, setSelectedRegion] = useState(allRegionsLabel)
-  const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false)
-  const { cart, toggleCart } = useCart()
-  const allProducts = getAllProducts(products)
+  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [search, setSearch] = useState("");
+  const [favorites, setFavorites] = useState<number[]>([]);
+  const [activeTab, setActiveTab] = useState("추천");
+  const [selectedRegion, setSelectedRegion] = useState(allRegionsLabel);
+  const [isRegionSelectorOpen, setIsRegionSelectorOpen] = useState(false);
+  const { cart, toggleCart } = useCart();
+  const allProducts = getAllProducts(products);
   const regions = useMemo(
     () => [...new Set(allProducts.map((product) => product.location))],
     [allProducts],
-  )
+  );
   const featuredProduct = useMemo(
     () =>
-      allProducts.find((product) => selectedRegion.endsWith(product.location)) ??
-      allProducts[0],
+      allProducts.find((product) =>
+        selectedRegion.endsWith(product.location),
+      ) ?? allProducts[0],
     [selectedRegion, allProducts],
-  )
+  );
 
   const visibleProducts = useMemo(() => {
-    const keyword = search.trim().toLowerCase()
+    const keyword = search.trim().toLowerCase();
     const filtered = allProducts.filter((product) => {
       const matchesCategory =
-        selectedCategory === "전체" || product.category === selectedCategory
+        selectedCategory === "전체" || product.category === selectedCategory;
       const matchesRegion =
         selectedRegion === allRegionsLabel ||
-        product.location === selectedRegion
+        product.location === selectedRegion;
       const matchesSearch =
         !keyword ||
         `${product.title} ${product.category} ${product.location}`
           .toLowerCase()
-          .includes(keyword)
-      return matchesCategory && matchesRegion && matchesSearch
-    })
+          .includes(keyword);
+      return matchesCategory && matchesRegion && matchesSearch;
+    });
 
     if (activeTab === "인기순") {
-      return filtered.slice().sort((a, b) => b.likes - a.likes)
+      return filtered.slice().sort((a, b) => b.likes - a.likes);
     }
-    return filtered
-  }, [activeTab, search, selectedCategory, selectedRegion])
+    return filtered;
+  }, [activeTab, search, selectedCategory, selectedRegion]);
 
   const toggleFavorite = (id: number) => {
     setFavorites((current) =>
       current.includes(id)
         ? current.filter((favorite) => favorite !== id)
         : [...current, id],
-    )
-  }
+    );
+  };
 
   return (
     <div className="app-shell">
@@ -153,8 +154,8 @@ function App() {
                   aria-pressed={selectedRegion === allRegionsLabel}
                   className={`home-region-option${selectedRegion === allRegionsLabel ? " selected" : ""}`}
                   onClick={() => {
-                    setSelectedRegion(allRegionsLabel)
-                    setIsRegionSelectorOpen(false)
+                    setSelectedRegion(allRegionsLabel);
+                    setIsRegionSelectorOpen(false);
                   }}
                   type="button"
                 >
@@ -168,8 +169,8 @@ function App() {
                       className={`home-region-option${selectedRegion === region ? " selected" : ""}`}
                       key={region}
                       onClick={() => {
-                        setSelectedRegion(region)
-                        setIsRegionSelectorOpen(false)
+                        setSelectedRegion(region);
+                        setIsRegionSelectorOpen(false);
                       }}
                       type="button"
                     >
@@ -284,7 +285,10 @@ function App() {
                       to={`/products/${product.id}`}
                     >
                       {product.image ? (
-                        <img src={imageUrl(product.image)} alt={product.title} />
+                        <img
+                          src={imageUrl(product.image)}
+                          alt={product.title}
+                        />
                       ) : (
                         <div
                           className="product-image-placeholder"
@@ -306,8 +310,8 @@ function App() {
                       aria-pressed={favorites.includes(product.id)}
                       className={`favorite-button ${favorites.includes(product.id) ? "is-favorite" : ""}`}
                       onClick={(event) => {
-                        event.preventDefault()
-                        toggleFavorite(product.id)
+                        event.preventDefault();
+                        toggleFavorite(product.id);
                       }}
                       type="button"
                     >
@@ -323,22 +327,34 @@ function App() {
                       </strong>
                       <button
                         aria-label={
-                          cart.some((item) => item.productId === String(product.id))
+                          cart.some(
+                            (item) => item.productId === String(product.id),
+                          )
                             ? `${product.title} 장바구니에서 빼기`
                             : `${product.title} 장바구니에 담기`
                         }
-                        aria-pressed={cart.some((item) => item.productId === String(product.id))}
+                        aria-pressed={cart.some(
+                          (item) => item.productId === String(product.id),
+                        )}
                         className={`cart-button ${
-                          cart.some((item) => item.productId === String(product.id)) ? "is-in-cart" : ""
+                          cart.some(
+                            (item) => item.productId === String(product.id),
+                          )
+                            ? "is-in-cart"
+                            : ""
                         }`}
                         onClick={(event) => {
-                          event.preventDefault()
-                          event.stopPropagation()
-                          toggleCart(product)
+                          event.preventDefault();
+                          event.stopPropagation();
+                          toggleCart(product);
                         }}
                         type="button"
                       >
-                        {cart.some((item) => item.productId === String(product.id)) ? "✓ 담김" : "+ 장바구니"}
+                        {cart.some(
+                          (item) => item.productId === String(product.id),
+                        )
+                          ? "✓ 담김"
+                          : "+ 장바구니"}
                       </button>
                     </div>
                     <div className="product-meta">
@@ -367,9 +383,9 @@ function App() {
               <button
                 type="button"
                 onClick={() => {
-                  setSearch("")
-                  setSelectedCategory("전체")
-                  setSelectedRegion(allRegionsLabel)
+                  setSearch("");
+                  setSelectedCategory("전체");
+                  setSelectedRegion(allRegionsLabel);
                 }}
               >
                 전체 매물 보기
@@ -408,7 +424,7 @@ function App() {
         <span aria-hidden="true">＋</span> 판매하기
       </Link>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
